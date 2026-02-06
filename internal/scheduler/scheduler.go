@@ -1,7 +1,6 @@
 package scheduler
 
 import (
-	"encoding/json"
 	"fmt"
 	"go-acs/internal/handlers"
 	"go-acs/internal/models"
@@ -113,7 +112,7 @@ func (s *Scheduler) processPendingTasks() {
 		fmt.Printf("[TASK WORKER] Processing task %d (type: %s, device: %d)\n", task.ID, task.Type, task.DeviceID)
 
 		// Update task status to processing
-		s.handler.DB.UpdateTaskStatus(task.ID, models.TaskStatusProcessing, nil, "")
+		s.handler.DB.UpdateTaskStatus(task.ID, models.TaskRunning, nil, "")
 
 		// Process task based on type
 		var err error
@@ -136,10 +135,10 @@ func (s *Scheduler) processPendingTasks() {
 		// Update task status
 		if err != nil {
 			errMsg := err.Error()
-			s.handler.DB.UpdateTaskStatus(task.ID, models.TaskStatusFailed, nil, errMsg)
+			s.handler.DB.UpdateTaskStatus(task.ID, models.TaskFailed, nil, errMsg)
 			fmt.Printf("[TASK WORKER] Task %d failed: %v\n", task.ID, err)
 		} else {
-			s.handler.DB.UpdateTaskStatus(task.ID, models.TaskStatusCompleted, nil, "")
+			s.handler.DB.UpdateTaskStatus(task.ID, models.TaskCompleted, nil, "")
 			fmt.Printf("[TASK WORKER] Task %d completed\n", task.ID)
 		}
 	}
