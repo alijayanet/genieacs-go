@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        .stat-card.revenue .stat-value {
+            color: #10b981;
+        }
+
+        .stat-card.pending .stat-value {
+            color: #f59e0b;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            font-size: 0.75rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .customer-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .customer-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6366f1, #0ea5e9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .customer-name {
+            font-weight: 500;
+        }
+
+        .customer-code {
+            font-size: 0.75rem;
+            color: var(--gray);
+            font-family: monospace;
+        }
+
+        .package-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: none;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--light);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            background: var(--card-bg);
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 8px 12px 8px 36px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--light);
+            width: 250px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .loading-row {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .loading-row i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        @media(max-width:1024px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width:768px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--dark);
+            border: 1px solid var(--success);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+        }
+
+        .toast.error i {
+            color: var(--danger);
+        }
+
+        .toast i {
+            color: var(--success);
+        }
+    </style>
+    <!-- Sidebar loaded via sidebar.js -->
+    <script src="/static/js/sidebar.js"></script>
+</head>
+
+<body>
+    <!-- Sidebar will be injected automatically by sidebar.js -->
+
+    <main class="main-content">
+        <div class="header">
+            <h1><i class="fas fa-users"></i> Customers</h1>
+            <button class="btn btn-primary" onclick="showAddModal()">
+                <i class="fas fa-plus"></i> Add Customer
+            </button>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCustomers">-</div>
+                <div class="stat-label">Total Customers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color:#10b981;" id="activeCustomers">-</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color:#f59e0b;" id="suspendedCustomers">-</div>
+                <div class="stat-label">Suspended</div>
+            </div>
+            <div class="stat-card revenue">
+                <div class="stat-value" id="monthlyRevenue">-</div>
+                <div class="stat-label">Monthly Revenue</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"
+                style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <div class="tabs">
+                    <button class="tab active" data-status="all" onclick="filterCustomers('all', this)">All</button>
+                    <button class="tab" data-status="active" onclick="filterCustomers('active', this)">Active</button>
+                    <button class="tab" data-status="suspended"
+                        onclick="filterCustomers('suspended', this)">Suspended</button>
+                </div>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search customers..." oninput="debounceSearch()">
+                </div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Package</th>
+                        <th>Device</th>
+                        <th>Status</th>
+                        <th>Balance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTable">
+                    <tr>
+                        <td colspan="6" class="loading-row">
+                            <i class="fas fa-spinner"></i>
+                            <div>Loading customers...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Add Customer Modal -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal" style="max-width:600px;">
+            <h2><i class="fas fa-user-plus"></i> Add Customer</h2>
+            <form id="addForm" onsubmit="saveCustomer(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="customerName" required placeholder="Customer name">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone *</label>
+                        <input type="tel" id="customerPhone" required placeholder="08xxxxxxxxxx">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="customerEmail" placeholder="email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Package *</label>
+                        <select id="customerPackage" required
+                            style="width:100%;padding:12px;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;color:var(--light);">
+                            <option value="">Select package...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Address *</label>
+                    <input type="text" id="customerAddress" required placeholder="Full address">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Assign Device</label>
+                        <select id="customerDevice"
+                            style="width:100%;padding:12px;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;color:var(--light);">
+                            <option value="">Select device (optional)...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Portal Username</label>
+                        <input type="text" id="portalUsername" placeholder="Auto-generated if empty">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Portal Password</label>
+                        <input type="password" id="portalPassword" placeholder="Leave empty for auto-generate">
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="customerStatus"
+                            style="width:100%;padding:12px;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;color:var(--light);">
+                            <option value="active">Active</option>
+                            <option value="suspended">Suspended</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="hidden" id="editCustomerId" value="">
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Customer Modal -->
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal" style="max-width:600px;">
+            <h2><i class="fas fa-user"></i> Customer Details</h2>
+            <div id="viewCustomerContent">
+                <!-- Content loaded dynamically -->
+            </div>
+            <div class="modal-actions" style="margin-top:1.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+                <button type="button" class="btn btn-primary" onclick="editFromView()"><i class="fas fa-edit"></i>
+                    Edit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Success!</span>
+    </div>
+
+    <script>
+        let customers = [];
+        let packages = [];
+        let devices = [];
+        let currentFilter = 'all';
+        let searchTimeout;
+        let viewingCustomerId = null;
+
+        async function init() {
+            await Promise.all([
+                loadStats(),
+                loadCustomers(),
+                loadPackages(),
+                loadDevices()
+            ]);
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/billing/stats');
+                const data = await response.json();
+                if (data) {
+                    document.getElementById('totalCustomers').textContent = data.totalCustomers || 0;
+                    document.getElementById('activeCustomers').textContent = data.activeCustomers || 0;
+                    document.getElementById('suspendedCustomers').textContent = data.suspendedCustomers || 0;
+                    document.getElementById('monthlyRevenue').textContent = formatCurrency(data.monthlyRevenue || 0);
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadCustomers() {
+            try {
+                const search = document.getElementById('searchInput').value;
+                let url = `/api/customers?status=${currentFilter === 'all' ? '' : currentFilter}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+                customers = data.customers || [];
+                renderCustomers();
+            } catch (error) {
+                console.error('Error loading customers:', error);
+                document.getElementById('customerTable').innerHTML = `
+                    <tr><td colspan="6" class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>Failed to load customers</div>
+                    </td></tr>`;
+            }
+        }
+
+        async function loadPackages() {
+            try {
+                const response = await fetch('/api/packages?active=true');
+                packages = await response.json() || [];
+                const select = document.getElementById('customerPackage');
+                select.innerHTML = '<option value="">Select package...</option>';
+                packages.forEach(pkg => {
+                    select.innerHTML += `<option value="${pkg.id}">${pkg.name} - ${formatCurrency(pkg.price)}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading packages:', error);
+            }
+        }
+
+        async function loadDevices() {
+            try {
+                const response = await fetch('/api/devices');
+                const data = await response.json();
+                devices = data.devices || [];
+                const select = document.getElementById('customerDevice');
+                select.innerHTML = '<option value="">Select device (optional)...</option>';
+                devices.forEach(device => {
+                    select.innerHTML += `<option value="${device.id}">${device.serialNumber} - ${device.model || 'Unknown Model'}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading devices:', error);
+            }
+        }
+
+        function renderCustomers() {
+            const tbody = document.getElementById('customerTable');
+
+            if (customers.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="6" class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <div>No customers found</div>
+                    </td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = customers.map(customer => {
+                const initials = getInitials(customer.name);
+                const statusClass = customer.status === 'active' ? 'online' :
+                    customer.status === 'suspended' ? '' : '';
+                const statusStyle = customer.status === 'suspended' ? 'background:rgba(245,158,11,0.15);color:#f59e0b;' :
+                    customer.status === 'inactive' ? 'background:rgba(100,116,139,0.15);color:#64748b;' : '';
+                const balanceClass = customer.balance < 0 ? 'color:#ef4444;' : '';
+                const pkg = packages.find(p => p.id === customer.packageId);
+                const device = customer.devices && customer.devices.length > 0 ? customer.devices[0] : null;
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="customer-info">
+                                <div class="customer-avatar">${initials}</div>
+                                <div>
+                                    <div class="customer-name">${customer.name}</div>
+                                    <div class="customer-code">${customer.customerCode}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="package-badge">${pkg ? pkg.name : 'No Package'}</span></td>
+                        <td>${device ? device.serialNumber : '-'}</td>
+                        <td><span class="status-badge ${statusClass}" style="${statusStyle}">${capitalize(customer.status)}</span></td>
+                        <td style="${balanceClass}">${formatCurrency(customer.balance || 0)}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn" title="View" onclick="viewCustomer(${customer.id})"><i class="fas fa-eye"></i></button>
+                                <button class="action-btn" title="Edit" onclick="editCustomer(${customer.id})"><i class="fas fa-edit"></i></button>
+                                <button class="action-btn delete" title="Delete" onclick="deleteCustomer(${customer.id}, '${customer.name}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getInitials(name) {
+            return name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function formatCurrency(amount) {
+            if (amount >= 1000000) {
+                return 'Rp ' + (amount / 1000000).toFixed(1) + 'M';
+            }
+            return 'Rp ' + amount.toLocaleString('id-ID');
+        }
+
+        function filterCustomers(status, btn) {
+            currentFilter = status;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            loadCustomers();
+        }
+
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(loadCustomers, 300);
+        }
+
+        function showAddModal() {
+            document.getElementById('addForm').reset();
+            document.getElementById('editCustomerId').value = '';
+            document.querySelector('#addModal h2').innerHTML = '<i class="fas fa-user-plus"></i> Add Customer';
+            document.getElementById('addModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('addModal').classList.remove('active');
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.remove('active');
+        }
+
+        async function viewCustomer(id) {
+            viewingCustomerId = id;
+            const customer = customers.find(c => c.id === id);
+            if (!customer) {
+                showToast('Customer not found', 'error');
+                return;
+            }
+
+            const pkg = packages.find(p => p.id === customer.packageId);
+            const device = customer.devices && customer.devices.length > 0 ? customer.devices[0] : null;
+
+            document.getElementById('viewCustomerContent').innerHTML = `
+                <div style="display:grid;gap:1rem;">
+                    <div style="display:flex;align-items:center;gap:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border);">
+                        <div class="customer-avatar" style="width:60px;height:60px;font-size:1.5rem;">${getInitials(customer.name)}</div>
+                        <div>
+                            <h3 style="margin-bottom:4px;">${customer.name}</h3>
+                            <div style="color:var(--gray);font-size:0.875rem;">${customer.customerCode}</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div><label style="color:var(--gray);font-size:0.75rem;">Phone</label><div>${customer.phone || '-'}</div></div>
+                        <div><label style="color:var(--gray);font-size:0.75rem;">Email</label><div>${customer.email || '-'}</div></div>
+                    </div>
+                    <div><label style="color:var(--gray);font-size:0.75rem;">Address</label><div>${customer.address || '-'}</div></div>
+                    <div class="form-row">
+                        <div><label style="color:var(--gray);font-size:0.75rem;">Package</label><div>${pkg ? pkg.name : 'No Package'}</div></div>
+                        <div><label style="color:var(--gray);font-size:0.75rem;">Status</label><div><span class="status-badge ${customer.status === 'active' ? 'online' : ''}">${capitalize(customer.status)}</span></div></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label style="color:var(--gray);font-size:0.75rem;">Balance</label><div>${formatCurrency(customer.balance || 0)}</div></div>
+                        <div><label style="color:var(--gray);font-size:0.75rem;">Device</label><div>${device ? device.serialNumber : 'No device assigned'}</div></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label style="color:var(--gray);font-size:0.75rem;">Portal Username</label><div>${customer.portalUsername || '-'}</div></div>
+                        <div><label style="color:var(--gray);font-size:0.75rem;">Join Date</label><div>${customer.joinDate ? new Date(customer.joinDate).toLocaleDateString() : '-'}</div></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function editFromView() {
+            closeViewModal();
+            editCustomer(viewingCustomerId);
+        }
+
+        async function editCustomer(id) {
+            const customer = customers.find(c => c.id === id);
+            if (!customer) {
+                showToast('Customer not found', 'error');
+                return;
+            }
+
+            document.getElementById('editCustomerId').value = id;
+            document.getElementById('customerName').value = customer.name;
+            document.getElementById('customerPhone').value = customer.phone || '';
+            document.getElementById('customerEmail').value = customer.email || '';
+            document.getElementById('customerPackage').value = customer.packageId || '';
+            document.getElementById('customerAddress').value = customer.address || '';
+            document.getElementById('customerStatus').value = customer.status || 'active';
+            document.getElementById('portalUsername').value = customer.portalUsername || '';
+
+            // Set device if exists
+            if (customer.devices && customer.devices.length > 0) {
+                document.getElementById('customerDevice').value = customer.devices[0].id;
+            }
+
+            document.querySelector('#addModal h2').innerHTML = '<i class="fas fa-user-edit"></i> Edit Customer';
+            document.getElementById('addModal').classList.add('active');
+        }
+
+        async function saveCustomer(e) {
+            e.preventDefault();
+
+            const editId = document.getElementById('editCustomerId').value;
+            const isEdit = editId !== '';
+
+            const data = {
+                name: document.getElementById('customerName').value,
+                phone: document.getElementById('customerPhone').value,
+                email: document.getElementById('customerEmail').value,
+                packageId: parseInt(document.getElementById('customerPackage').value) || 0,
+                address: document.getElementById('customerAddress').value,
+                status: document.getElementById('customerStatus').value,
+                portalUsername: document.getElementById('portalUsername').value,
+                portalPassword: document.getElementById('portalPassword').value
+            };
+
+            try {
+                const url = isEdit ? `/api/customers/${editId}` : '/api/customers';
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showToast(isEdit ? 'Customer updated!' : 'Customer added!');
+                    closeModal();
+                    loadCustomers();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    showToast(error.error || 'Failed to save customer', 'error');
+                }
+            } catch (error) {
+                showToast('Connection error', 'error');
+            }
+        }
+
+        async function deleteCustomer(id, name) {
+            if (!confirm(`Are you sure you want to delete customer "${name}"?`)) return;
+
+            try {
+                const response = await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showToast('Customer deleted!');
+                    loadCustomers();
+                    loadStats();
+                } else {
+                    showToast('Failed to delete customer', 'error');
+                }
+            } catch (error) {
+                showToast('Connection error', 'error');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = toast.querySelector('i');
+            document.getElementById('toastMessage').textContent = message;
+
+            toast.classList.remove('error');
+            icon.className = 'fas fa-check-circle';
+
+            if (type === 'error') {
+                toast.classList.add('error');
+                icon.className = 'fas fa-exclamation-circle';
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Auth check
+        if (!localStorage.getItem('token')) location = '/';
+
+        // Initialize
+        init();
+    </script>
+</body>
+
+</html>

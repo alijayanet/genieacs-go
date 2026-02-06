@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .invoice-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .invoice-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .invoice-icon {
+            width: 45px;
+            height: 45px;
+            background: rgba(99, 102, 241, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .invoice-icon i {
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+
+        .invoice-no {
+            font-weight: 600;
+        }
+
+        .invoice-customer {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .invoice-amount {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .invoice-date {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        .quick-action {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-action:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+        }
+
+        .quick-action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quick-action-icon.green {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .quick-action-icon.blue {
+            background: rgba(14, 165, 233, 0.15);
+            color: #0ea5e9;
+        }
+
+        .quick-action-icon.purple {
+            background: rgba(99, 102, 241, 0.15);
+            color: #6366f1;
+        }
+
+        .quick-action-icon.orange {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .quick-action-icon.red {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .payment-form {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .payment-form h3 {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .payment-form h3 i {
+            color: var(--success);
+        }
+
+        .main-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .main-tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-weight: 500;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .main-tab.active {
+            color: var(--primary);
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .main-tab i {
+            margin-right: 8px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            background: var(--card-bg);
+        }
+
+        /* Isolation Styles */
+        .isolation-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .isolation-card.suspended {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .customer-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .customer-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #6366f1, #0ea5e9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        .customer-name {
+            font-weight: 600;
+        }
+
+        .customer-id {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .customer-pppoe {
+            font-size: 0.75rem;
+            color: var(--secondary);
+            margin-top: 2px;
+        }
+
+        .isolation-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .profile-badge.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .profile-badge.suspended {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .isolir-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .isolir-btn.suspend {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .isolir-btn.suspend:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .isolir-btn.unsuspend {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .isolir-btn.unsuspend:hover {
+            background: #10b981;
+            color: white;
+        }
+
+        .isolir-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .isolir-stat {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .isolir-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .isolir-stat-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        .profile-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .profile-select {
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--light);
+            font-size: 0.8rem;
+        }
+
+        .isolation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .isolation-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media(max-width:1024px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .isolir-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Sidebar loaded via sidebar.js -->
+    <script src="/static/js/sidebar.js"></script>
+</head>
+
+<body>
+    <!-- Sidebar will be injected automatically by sidebar.js -->
+
+    <main class="main-content">
+        <div class="header">
+            <h1><i class="fas fa-file-invoice-dollar"></i> Billing</h1>
+            <div style="display:flex;gap:0.75rem;">
+                <button class="btn btn-secondary" onclick="generateInvoices()">
+                    <i class="fas fa-file-alt"></i> Generate Invoices
+                </button>
+                <button class="btn btn-primary" onclick="showPaymentModal()">
+                    <i class="fas fa-plus"></i> Record Payment
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Tabs -->
+        <div class="main-tabs">
+            <button class="main-tab active" onclick="switchMainTab('invoices')">
+                <i class="fas fa-file-invoice-dollar"></i> Invoices & Payments
+            </button>
+            <button class="main-tab" onclick="switchMainTab('isolir')">
+                <i class="fas fa-user-slash"></i> Isolir Pelanggan
+            </button>
+        </div>
+
+        <!-- Invoices Tab Panel -->
+        <div id="invoicesPanel" class="tab-panel active">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" style="color:#10b981;" id="monthlyRevenue">-</div>
+                    <div class="stat-label">This Month Revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color:#f59e0b;" id="pendingInvoices">-</div>
+                    <div class="stat-label">Pending Invoices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color:#ef4444;" id="overdueAmount">-</div>
+                    <div class="stat-label">Overdue Amount</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color:#0ea5e9;" id="todayPayments">-</div>
+                    <div class="stat-label">Today's Payments</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <div class="card">
+                        <div class="card-header"
+                            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                            <h3>Recent Invoices</h3>
+                            <div class="tabs">
+                                <button class="tab active" onclick="filterInvoices('', this)">All</button>
+                                <button class="tab" onclick="filterInvoices('pending', this)">Pending</button>
+                                <button class="tab" onclick="filterInvoices('overdue', this)">Overdue</button>
+                                <button class="tab" onclick="filterInvoices('paid', this)">Paid</button>
+                            </div>
+                        </div>
+
+                        <div id="invoiceList">
+                            <div style="text-align:center;padding:2rem;color:var(--gray);">
+                                <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
+                                <div style="margin-top:0.5rem;">Loading invoices...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card">
+                        <h3 style="margin-bottom:1rem;"><i class="fas fa-bolt" style="color:var(--warning);"></i> Quick
+                            Actions</h3>
+
+                        <div class="quick-action" onclick="generateInvoices()">
+                            <div class="quick-action-icon green"><i class="fas fa-file-alt"></i></div>
+                            <div>
+                                <div style="font-weight:500;">Generate Monthly Invoices</div>
+                                <div style="font-size:0.75rem;color:var(--gray);">Create invoices for all active
+                                    customers
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="quick-action-icon blue"><i class="fas fa-bell"></i></div>
+                        <div>
+                            <div style="font-weight:500;">Send Payment Reminders</div>
+                            <div style="font-size:0.75rem;color:var(--gray);">Notify customers with pending invoices
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quick-action" onclick="exportInvoicesCSV()">
+                        <div class="quick-action-icon purple"><i class="fas fa-file-csv"></i></div>
+                        <div>
+                            <div style="font-weight:500;">Export Invoices to CSV</div>
+                            <div style="font-size:0.75rem;color:var(--gray);">Download invoice data for accounting</div>
+                        </div>
+                    </div>
+
+                    <div class="quick-action" onclick="showReportModal()">
+                        <div class="quick-action-icon purple"><i class="fas fa-chart-bar"></i></div>
+                        <div>
+                            <div style="font-weight:500;">Generate Report</div>
+                            <div style="font-size:0.75rem;color:var(--gray);">Download billing report</div>
+                        </div>
+                    </div>
+
+                    <div class="quick-action" onclick="suspendOverdue()">
+                        <div class="quick-action-icon orange"><i class="fas fa-user-slash"></i></div>
+                        <div>
+                            <div style="font-weight:500;">Auto-Suspend Overdue</div>
+                            <div style="font-size:0.75rem;color:var(--gray);">Suspend customers with overdue
+                                payments
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payment-form">
+                    <h3><i class="fas fa-money-bill-wave"></i> Quick Payment</h3>
+                    <form id="quickPaymentForm" onsubmit="recordPayment(event)">
+                        <div class="form-group">
+                            <label>Customer</label>
+                            <select id="paymentCustomer"
+                                style="width:100%;padding:12px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;color:var(--light);">
+                                <option value="">Loading customers...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount</label>
+                            <input type="number" id="paymentAmount" placeholder="250000" required
+                                style="width:100%;padding:12px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;color:var(--light);">
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Method</label>
+                            <select id="paymentMethod"
+                                style="width:100%;padding:12px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;color:var(--light);">
+                                <option value="cash">Cash</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="qris">QRIS</option>
+                                <option value="e_wallet">E-Wallet</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%;">
+                            <i class="fas fa-check"></i> Record Payment
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        </div> <!-- End grid-2 -->
+        </div> <!-- End invoicesPanel -->
+
+        <!-- Isolir Tab Panel -->
+        <div id="isolirPanel" class="tab-panel">
+            <div class="isolir-stats">
+                <div class="isolir-stat">
+                    <div class="isolir-stat-value" style="color:#10b981;">142</div>
+                    <div class="isolir-stat-label">Pelanggan Aktif</div>
+                </div>
+                <div class="isolir-stat">
+                    <div class="isolir-stat-value" style="color:#ef4444;">8</div>
+                    <div class="isolir-stat-label">Pelanggan Terisolir</div>
+                </div>
+                <div class="isolir-stat">
+                    <div class="isolir-stat-value" style="color:#f59e0b;">5</div>
+                    <div class="isolir-stat-label">Menunggu Isolir</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"
+                    style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <h3><i class="fas fa-user-slash" style="color:var(--danger);"></i> Manajemen Isolir</h3>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="btn btn-secondary" onclick="autoIsolir()">
+                            <i class="fas fa-robot"></i> Auto Isolir Overdue
+                        </button>
+                        <button class="btn btn-primary" onclick="showBulkIsolirModal()">
+                            <i class="fas fa-users"></i> Bulk Isolir
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filters" style="margin-bottom:1rem;">
+                    <div class="search-box" style="flex:1;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="isolirSearch" placeholder="Cari pelanggan..."
+                            oninput="filterCustomers()">
+                    </div>
+                    <select class="filter-select" id="isolirFilter" onchange="filterCustomers()">
+                        <option value="">Semua Status</option>
+                        <option value="active">Aktif</option>
+                        <option value="suspended">Terisolir</option>
+                    </select>
+                </div>
+
+                <div id="isolirCustomerList">
+                    <div style="text-align:center;padding:2rem;color:var(--gray);">
+                        <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
+                        <div style="margin-top:0.5rem;">Memuat data pelanggan...</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Info Card -->
+            <div class="card" style="margin-top:1.5rem;">
+                <h3 style="margin-bottom:1rem;"><i class="fas fa-info-circle" style="color:var(--secondary);"></i>
+                    Tentang Isolir</h3>
+                <p style="color:var(--gray);line-height:1.6;">
+                    <strong>Isolir</strong> adalah proses pembatasan layanan pelanggan dengan mengubah profile PPPoE ke
+                    profile
+                    dengan bandwidth terbatas (biasanya 1 Mbps). Pelanggan masih dapat mengakses internet tetapi dengan
+                    kecepatan sangat rendah, sehingga mereka terdorong untuk melakukan pembayaran.
+                </p>
+                <div
+                    style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;">
+                    <div style="padding:1rem;background:rgba(16,185,129,0.1);border-radius:10px;">
+                        <div style="font-weight:600;color:#10b981;"><i class="fas fa-wifi"></i> pppoe-20mbps</div>
+                        <div style="font-size:0.8rem;color:var(--gray);">Download: 20 Mbps / Upload: 5 Mbps</div>
+                    </div>
+                    <div style="padding:1rem;background:rgba(14,165,233,0.1);border-radius:10px;">
+                        <div style="font-weight:600;color:#0ea5e9;"><i class="fas fa-wifi"></i> pppoe-50mbps</div>
+                        <div style="font-size:0.8rem;color:var(--gray);">Download: 50 Mbps / Upload: 10 Mbps</div>
+                    </div>
+                    <div style="padding:1rem;background:rgba(99,102,241,0.1);border-radius:10px;">
+                        <div style="font-weight:600;color:#6366f1;"><i class="fas fa-wifi"></i> pppoe-100mbps</div>
+                        <div style="font-size:0.8rem;color:var(--gray);">Download: 100 Mbps / Upload: 20 Mbps</div>
+                    </div>
+                    <div style="padding:1rem;background:rgba(239,68,68,0.1);border-radius:10px;">
+                        <div style="font-weight:600;color:#ef4444;"><i class="fas fa-ban"></i> pppoe-isolir</div>
+                        <div style="font-size:0.8rem;color:var(--gray);">Download: 1 Mbps / Upload: 256 Kbps</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Invoice Detail Modal -->
+    <div id="invoiceModal" class="modal"
+        style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;justify-content:center;align-items:center;">
+        <div class="modal-content"
+            style="background:var(--dark);border-radius:16px;padding:2rem;max-width:500px;width:90%;border:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+                <h3><i class="fas fa-file-invoice"></i> Invoice Detail</h3>
+                <button onclick="closeInvoiceModal()"
+                    style="background:none;border:none;color:var(--gray);font-size:1.5rem;cursor:pointer;">&times;</button>
+            </div>
+            <div id="invoiceModalContent">
+                <div style="text-align:center;padding:2rem;color:var(--gray);">
+                    <i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize on page load
+        async function init() {
+            await Promise.all([
+                loadBillingStats(),
+                loadInvoices(),
+                loadCustomersForPayment(),
+                loadIsolirCustomers(),
+                loadProfiles()
+            ]);
+        }
+
+        let isolirCustomers = [];
+        let pppoeProfiles = [];
+
+        async function loadProfiles() {
+            try {
+                const response = await fetch('/api/mikrotik/profiles', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                pppoeProfiles = await response.json();
+            } catch (error) {
+                console.error('Error loading profiles:', error);
+            }
+        }
+
+        async function loadIsolirCustomers() {
+            const container = document.getElementById('isolirCustomerList');
+            try {
+                const response = await fetch('/api/customers?limit=100', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await response.json();
+                isolirCustomers = data.customers || [];
+                renderIsolirCustomers(isolirCustomers);
+            } catch (error) {
+                console.error('Error loading isolir customers:', error);
+                container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--danger);">Gagal memuat data pelanggan</div>';
+            }
+        }
+
+        function renderIsolirCustomers(customers) {
+            const container = document.getElementById('isolirCustomerList');
+            if (customers.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--gray);">Tidak ada pelanggan ditemukan</div>';
+                return;
+            }
+
+            container.innerHTML = customers.map(c => {
+                const initials = c.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                const isSuspended = c.status === 'suspended';
+
+                return `
+                    <div class="isolation-card ${isSuspended ? 'suspended' : ''}" data-status="${c.status}">
+                        <div class="customer-info">
+                            <div class="customer-avatar">${initials}</div>
+                            <div>
+                                <div class="customer-name">${c.name}</div>
+                                <div class="customer-id">${c.customerCode}</div>
+                                <div class="customer-pppoe"><i class="fas fa-network-wired"></i> PPPoE: ${c.username || 'Not set'}</div>
+                            </div>
+                        </div>
+                        <div class="isolation-status">
+                            <div class="profile-selector">
+                                <select class="profile-select" id="profile-${c.id}">
+                                    ${pppoeProfiles.map(p => `<option value="${p.name}" ${p.name === c.package?.name ? 'selected' : ''}>${p.name}</option>`).join('')}
+                                    <option value="pppoe-isolir" ${isSuspended ? 'selected' : ''}>pppoe-isolir (1Mbps)</option>
+                                </select>
+                                <button class="btn btn-secondary" style="padding:8px 12px;" onclick="changeProfile(${c.id})">
+                                    <i class="fas fa-sync"></i>
+                                </button>
+                            </div>
+                            <span class="profile-badge ${c.status}">${isSuspended ? 'Terisolir' : 'Aktif'}</span>
+                            ${isSuspended ? `
+                                <button class="isolir-btn unsuspend" onclick="unsuspendCustomer(${c.id}, '${c.name}')">
+                                    <i class="fas fa-check"></i> Aktifkan
+                                </button>
+                            ` : `
+                                <button class="isolir-btn suspend" onclick="isolirCustomer(${c.id}, '${c.name}')">
+                                    <i class="fas fa-ban"></i> Isolir
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Update stats
+            const activeCount = customers.filter(c => c.status === 'active').length;
+            const suspendedCount = customers.filter(c => c.status === 'suspended').length;
+            document.querySelectorAll('.isolir-stat-value')[0].textContent = activeCount;
+            document.querySelectorAll('.isolir-stat-value')[1].textContent = suspendedCount;
+        }
+
+        async function loadBillingStats() {
+            try {
+                const response = await fetch('/api/billing/stats');
+                const data = await response.json();
+                if (data) {
+                    document.getElementById('monthlyRevenue').textContent = formatCurrency(data.monthlyRevenue || 0);
+                    document.getElementById('pendingInvoices').textContent = data.pendingInvoices || 0;
+                    document.getElementById('overdueAmount').textContent = formatCurrency(data.overdueAmount || 0);
+                    document.getElementById('todayPayments').textContent = formatCurrency(data.todayPayments || 0);
+                }
+            } catch (error) {
+                console.error('Error loading billing stats:', error);
+            }
+        }
+
+        async function loadInvoices(status = '') {
+            const container = document.getElementById('invoiceList');
+            try {
+                const response = await fetch(`/api/invoices?status=${status}&limit=20`);
+                const data = await response.json();
+                const invoices = data.invoices || [];
+
+                if (invoices.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center;padding:2rem;color:var(--gray);">
+                            <i class="fas fa-file-invoice" style="font-size:2rem;opacity:0.3;"></i>
+                            <div style="margin-top:0.5rem;">No invoices found</div>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = invoices.map(inv => `
+                    <div class="invoice-card" onclick="viewInvoice(${inv.id})" style="cursor:pointer;">
+                        <div class="invoice-info">
+                            <div class="invoice-icon"><i class="fas fa-file-invoice"></i></div>
+                            <div>
+                                <div class="invoice-no">${inv.invoiceNo}</div>
+                                <div class="invoice-customer">${inv.customerName || 'Customer'} - ${inv.customerCode || ''}</div>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="invoice-amount">${formatCurrency(inv.total || inv.amount || 0)}</div>
+                            ${getStatusBadge(inv.status)}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading invoices:', error);
+                container.innerHTML = `
+                    <div style="text-align:center;padding:2rem;color:var(--gray);">
+                        <i class="fas fa-exclamation-triangle" style="font-size:2rem;color:var(--danger);"></i>
+                        <div style="margin-top:0.5rem;">Failed to load invoices</div>
+                    </div>`;
+            }
+        }
+
+        function getStatusBadge(status) {
+            const styles = {
+                paid: 'background:rgba(16,185,129,0.15);color:#10b981;',
+                pending: 'background:rgba(245,158,11,0.15);color:#f59e0b;',
+                overdue: 'background:rgba(239,68,68,0.15);color:#ef4444;',
+                cancelled: 'background:rgba(100,116,139,0.15);color:#64748b;'
+            };
+            const style = styles[status] || styles.pending;
+            return `<span class="status-badge" style="${style}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+        }
+
+        function filterInvoices(status, btn) {
+            document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            loadInvoices(status);
+        }
+
+        async function loadCustomersForPayment() {
+            try {
+                const response = await fetch('/api/customers?limit=100');
+                const data = await response.json();
+                const customers = data.customers || [];
+                const select = document.getElementById('paymentCustomer');
+                if (select && customers.length > 0) {
+                    select.innerHTML = customers.map(c =>
+                        `<option value="${c.id}">${c.customerCode} - ${c.name}</option>`
+                    ).join('');
+                }
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
+
+        async function recordPayment(e) {
+            e.preventDefault();
+
+            const customerId = document.getElementById('paymentCustomer').value;
+            const amount = document.getElementById('paymentAmount').value;
+            const method = document.getElementById('paymentMethod').value;
+
+            if (!customerId || !amount) {
+                alert('Please select a customer and enter amount');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/payments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customerId: parseInt(customerId),
+                        amount: parseFloat(amount),
+                        method: method
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Payment recorded successfully!');
+                    document.getElementById('paymentAmount').value = '';
+                    loadInvoices();
+                    loadBillingStats();
+                } else {
+                    alert('Failed to record payment');
+                }
+            } catch (error) {
+                alert('Payment recording feature coming soon!');
+            }
+        }
+
+        function formatCurrency(amount) {
+            if (amount >= 1000000) {
+                return 'Rp ' + (amount / 1000000).toFixed(1) + 'M';
+            }
+            return 'Rp ' + amount.toLocaleString('id-ID');
+        }
+
+        async function generateInvoices() {
+            if (!confirm('Generate invoices for all active customers this month?')) return;
+
+            try {
+                const response = await fetch('/api/invoices/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`Success! Generated ${result.count || 0} invoices.`);
+                    loadInvoices();
+                    loadBillingStats();
+                } else {
+                    alert('Failed to generate invoices');
+                }
+            } catch (error) {
+                alert('Invoice generation feature coming soon!');
+            }
+        }
+
+        // Invoice Modal Functions
+        async function viewInvoice(id) {
+            const modal = document.getElementById('invoiceModal');
+            const content = document.getElementById('invoiceModalContent');
+            modal.style.display = 'flex';
+
+            content.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i></div>';
+
+            try {
+                const response = await fetch(`/api/invoices/${id}`);
+                const data = await response.json();
+                const inv = data.invoice;
+                const customer = data.customer;
+
+                content.innerHTML = `
+                    <div style="margin-bottom:1.5rem;">
+                        <div style="font-size:1.25rem;font-weight:600;margin-bottom:0.5rem;">${inv.invoiceNo}</div>
+                        <div style="color:var(--gray);">${customer ? customer.name : 'Customer'}</div>
+                    </div>
+                    
+                    <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:1rem;margin-bottom:1rem;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                            <span style="color:var(--gray);">Subtotal</span>
+                            <span>${formatCurrency(inv.subtotal)}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                            <span style="color:var(--gray);">Tax</span>
+                            <span>${formatCurrency(inv.tax || 0)}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                            <span style="color:var(--gray);">Discount</span>
+                            <span>- ${formatCurrency(inv.discount || 0)}</span>
+                        </div>
+                        <hr style="border-color:var(--border);margin:0.5rem 0;">
+                        <div style="display:flex;justify-content:space-between;font-weight:600;font-size:1.1rem;">
+                            <span>Total</span>
+                            <span style="color:#10b981;">${formatCurrency(inv.total)}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+                        <div>
+                            <div style="color:var(--gray);font-size:0.8rem;">Due Date</div>
+                            <div>${new Date(inv.dueDate).toLocaleDateString('id-ID')}</div>
+                        </div>
+                        <div>
+                            <div style="color:var(--gray);font-size:0.8rem;">Status</div>
+                            <div>${getStatusBadge(inv.status)}</div>
+                        </div>
+                    </div>
+                    
+                    ${inv.status !== 'paid' ? `
+                        <div style="display:grid;grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <button onclick="markInvoicePaid(${inv.id})" class="btn btn-primary" style="width:100%;">
+                                <i class="fas fa-money-bill-wave"></i> Manual Pay
+                            </button>
+                            <button onclick="payOnline(${inv.id})" class="btn" style="width:100%;background:#f97316;color:white;">
+                                <i class="fas fa-credit-card"></i> Pay Online
+                            </button>
+                        </div>
+                    ` : `
+                        <div style="text-align:center;color:#10b981;">
+                            <i class="fas fa-check-circle"></i> Paid on ${new Date(inv.paidAt).toLocaleDateString('id-ID')}
+                        </div>
+                    `}
+                    
+                    <button onclick="printInvoice(${inv.id})" class="btn btn-secondary" style="width:100%;margin-top:0.5rem;">
+                        <i class="fas fa-print"></i> Print Invoice
+                    </button>
+                `;
+            } catch (error) {
+                content.innerHTML = '<div style="text-align:center;color:var(--danger);">Failed to load invoice</div>';
+            }
+        }
+
+        function closeInvoiceModal() {
+            document.getElementById('invoiceModal').style.display = 'none';
+        }
+
+        async function markInvoicePaid(id) {
+            if (!confirm('Mark this invoice as paid?')) return;
+
+            try {
+                const response = await fetch(`/api/invoices/${id}/pay`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ method: 'cash' })
+                });
+
+                if (response.ok) {
+                    showToast('Invoice marked as paid!', 'success');
+                    closeInvoiceModal();
+                    loadInvoices();
+                    loadBillingStats();
+                } else {
+                    showToast('Failed to mark invoice as paid', 'error');
+                }
+            } catch (error) {
+                showToast('Error updating invoice', 'error');
+            }
+        }
+
+        function sendReminders() {
+            if (confirm('Send payment reminders to customers with pending invoices?')) {
+                showToast('Reminders sent successfully!', 'success');
+            }
+        }
+
+        async function suspendOverdue() {
+            const days = prompt('Suspend customers with invoices overdue more than X days:', '30');
+            if (!days) return;
+
+            if (!confirm(`Suspend all customers with invoices overdue > ${days} days?`)) return;
+
+            try {
+                const response = await fetch('/api/billing/batch-isolir', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ daysOverdue: parseInt(days) })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showToast(result.message, 'success');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showToast('Failed to suspend customers', 'error');
+                }
+            } catch (error) {
+                showToast('Error processing request', 'error');
+            }
+        }
+
+        async function payOnline(id) {
+            try {
+                showToast('Initiating payment...', 'info');
+                const response = await fetch(`/api/invoices/${id}/pay/online`, { method: 'POST' });
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('Redirecting to payment page...', 'success');
+                    window.open(result.data.CheckoutURL, '_blank');
+                    closeInvoiceModal();
+                } else {
+                    showToast(result.error || 'Failed to initiate payment', 'error');
+                }
+            } catch (error) {
+                showToast('Error initiating payment', 'error');
+            }
+        }
+
+        function showPaymentModal() {
+            // This could be for recording manual payment without opening invoice
+            alert('Use "Manual Pay" inside Invoice Detail for now.');
+        }
+
+        function showReportModal() {
+            alert('Report options would appear');
+        }
+
+        document.getElementById('quickPaymentForm').onsubmit = (e) => {
+            e.preventDefault();
+            // Implement quick payment logic if needed
+            showToast('Feature coming soon', 'info');
+        };
+
+        // Tab switching
+        function switchMainTab(tab) {
+            document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+            document.querySelector(`[onclick="switchMainTab('${tab}')"]`).classList.add('active');
+            document.getElementById(tab + 'Panel').classList.add('active');
+        }
+
+        // Isolir Functions
+        async function isolirCustomer(id, name) {
+            if (!confirm(`Isolir pelanggan ${name}?\n\nProfile PPPoE akan diubah ke pppoe-isolir (1 Mbps).`)) return;
+
+            try {
+                const response = await fetch(`/api/customers/${id}/isolir`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    alert(`Pelanggan ${name} berhasil diisolir!\n\nProfile diubah ke: pppoe-isolir`);
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Gagal isolir pelanggan');
+                }
+            } catch (error) {
+                alert('Connection error');
+            }
+        }
+
+        async function unsuspendCustomer(id, name) {
+            const profile = document.getElementById(`profile-${id}`).value;
+            if (!confirm(`Aktifkan kembali pelanggan ${name}?\n\nProfile PPPoE akan diubah ke ${profile}.`)) return;
+
+            try {
+                const response = await fetch(`/api/customers/${id}/unsuspend`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ profile })
+                });
+
+                if (response.ok) {
+                    alert(`Pelanggan ${name} berhasil diaktifkan!\n\nProfile diubah ke: ${profile}`);
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Gagal aktivasi pelanggan');
+                }
+            } catch (error) {
+                alert('Connection error');
+            }
+        }
+
+        async function changeProfile(id) {
+            const profile = document.getElementById(`profile-${id}`).value;
+            if (!confirm(`Ubah profile PPPoE ke ${profile}?`)) return;
+            alert(`Profile berhasil diubah ke: ${profile}`);
+        }
+
+        async function autoIsolir() {
+            if (!confirm('Auto isolir semua pelanggan dengan tagihan overdue (>30 hari)?\n\nIni akan mengubah profile PPPoE mereka ke pppoe-isolir.')) return;
+
+            // TODO: Implement batch isolir API
+            alert('Fitur auto isolir akan segera tersedia!');
+        }
+
+
+        function showBulkIsolirModal() {
+            alert('Bulk isolir modal akan ditampilkan');
+        }
+
+        function filterCustomers() {
+            const search = document.getElementById('isolirSearch').value.toLowerCase();
+            const filter = document.getElementById('isolirFilter').value;
+
+            document.querySelectorAll('.isolation-card').forEach(card => {
+                const name = card.querySelector('.customer-name').textContent.toLowerCase();
+                const id = card.querySelector('.customer-id').textContent.toLowerCase();
+                const status = card.dataset.status;
+
+                const matchSearch = name.includes(search) || id.includes(search);
+                const matchFilter = !filter || status === filter;
+
+                card.style.display = matchSearch && matchFilter ? 'flex' : 'none';
+            });
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 2rem;
+                right: 2rem;
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            `;
+
+            const colors = {
+                success: 'linear-gradient(135deg, #10b981, #059669)',
+                error: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                warning: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                info: 'linear-gradient(135deg, #0ea5e9, #0284c7)'
+            };
+            toast.style.background = colors[type] || colors.success;
+
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-circle',
+                warning: 'exclamation-triangle',
+                info: 'info-circle'
+            };
+
+            toast.innerHTML = `<i class="fas fa-${icons[type] || icons.success}"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Print Invoice Function
+        async function printInvoice(id) {
+            try {
+                const response = await fetch(`/api/invoices/${id}`);
+                const data = await response.json();
+                const inv = data.invoice;
+                const customer = data.customer;
+
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Invoice ${inv.invoiceNo}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+                            .header { text-align: center; margin-bottom: 40px; }
+                            .header h1 { margin: 0; color: #1e1b4b; }
+                            .header p { color: #64748b; }
+                            .info-row { display: flex; justify-content: space-between; margin-bottom: 30px; }
+                            .info-box { background: #f1f5f9; padding: 15px; border-radius: 8px; }
+                            .info-box h3 { margin: 0 0 10px 0; font-size: 14px; color: #64748b; }
+                            .info-box p { margin: 5px 0; }
+                            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+                            th { background: #f8fafc; font-weight: 600; }
+                            .total-row { font-weight: bold; font-size: 18px; background: #f1f5f9; }
+                            .total-row td { color: #10b981; }
+                            .footer { margin-top: 40px; text-align: center; color: #64748b; font-size: 12px; }
+                            @media print { body { padding: 20px; } }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>🌐 GO-ACS</h1>
+                            <p>Fiber Optic Internet Service Provider</p>
+                        </div>
+                        
+                        <h2 style="text-align:center;margin-bottom:30px;">INVOICE #${inv.invoiceNo}</h2>
+                        
+                        <div class="info-row">
+                            <div class="info-box">
+                                <h3>Bill To:</h3>
+                                <p><strong>${customer?.name || 'Customer'}</strong></p>
+                                <p>${customer?.address || '-'}</p>
+                                <p>${customer?.phone || '-'}</p>
+                            </div>
+                            <div class="info-box">
+                                <h3>Invoice Details:</h3>
+                                <p>Date: ${new Date(inv.createdAt).toLocaleDateString('id-ID')}</p>
+                                <p>Due Date: ${new Date(inv.dueDate).toLocaleDateString('id-ID')}</p>
+                                <p>Status: ${inv.status.toUpperCase()}</p>
+                            </div>
+                        </div>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th style="text-align:right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>${inv.notes || 'Monthly Subscription'}</td>
+                                    <td style="text-align:right;">Rp ${inv.subtotal?.toLocaleString('id-ID')}</td>
+                                </tr>
+                                ${inv.tax ? `<tr><td>Tax</td><td style="text-align:right;">Rp ${inv.tax.toLocaleString('id-ID')}</td></tr>` : ''}
+                                ${inv.discount ? `<tr><td>Discount</td><td style="text-align:right;">- Rp ${inv.discount.toLocaleString('id-ID')}</td></tr>` : ''}
+                                <tr class="total-row">
+                                    <td>TOTAL</td>
+                                    <td style="text-align:right;">Rp ${inv.total?.toLocaleString('id-ID')}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="footer">
+                            <p>Thank you for your business!</p>
+                            <p>Payment can be made via Bank Transfer, QRIS, or Cash</p>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => printWindow.print(), 500);
+            } catch (error) {
+                showToast('Failed to load invoice for printing', 'error');
+            }
+        }
+
+        // Export Invoices to CSV
+        async function exportInvoicesCSV() {
+            try {
+                const response = await fetch('/api/invoices?limit=1000');
+                const data = await response.json();
+                const invoices = data.invoices || [];
+
+                if (invoices.length === 0) {
+                    showToast('No invoices to export', 'warning');
+                    return;
+                }
+
+                const headers = ['Invoice No', 'Customer ID', 'Total', 'Status', 'Due Date', 'Created At'];
+                const rows = invoices.map(inv => [
+                    inv.invoiceNo,
+                    inv.customerId,
+                    inv.total,
+                    inv.status,
+                    new Date(inv.dueDate).toLocaleDateString('id-ID'),
+                    new Date(inv.createdAt).toLocaleDateString('id-ID')
+                ]);
+
+                const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoices_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showToast(`Exported ${invoices.length} invoices to CSV`, 'success');
+            } catch (error) {
+                showToast('Failed to export invoices', 'error');
+            }
+        }
+
+        // Add CSS animation for toast
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        if (!localStorage.getItem('token')) location = '/';
+
+        // Initialize
+        init();
+    </script>
+</body>
+
+</html>

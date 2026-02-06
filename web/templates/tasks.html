@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasks - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* Page-specific styles only - sidebar is handled by sidebar.js */
+        .task-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .task-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-icon.pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .task-icon.running {
+            background: rgba(14, 165, 233, 0.15);
+            color: #0ea5e9;
+        }
+
+        .task-icon.completed {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .task-icon.failed {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-type {
+            font-weight: 500;
+        }
+
+        .task-device {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .task-status {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .task-status.pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .task-status.running {
+            background: rgba(14, 165, 233, 0.15);
+            color: #0ea5e9;
+        }
+
+        .task-status.completed {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .task-status.failed {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .task-time {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--gray);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            color: var(--light);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar will be injected automatically by sidebar.js -->
+
+    <main class="main-content">
+        <div class="header">
+            <h1><i class="fas fa-tasks"></i> Tasks</h1>
+            <button class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Task
+            </button>
+        </div>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterTasks('all')">All</button>
+            <button class="filter-btn" onclick="filterTasks('pending')">Pending</button>
+            <button class="filter-btn" onclick="filterTasks('running')">Running</button>
+            <button class="filter-btn" onclick="filterTasks('completed')">Completed</button>
+            <button class="filter-btn" onclick="filterTasks('failed')">Failed</button>
+        </div>
+
+        <div class="card">
+            <div id="taskList">
+                <div class="task-card">
+                    <div class="task-icon pending"><i class="fas fa-sync"></i></div>
+                    <div class="task-info">
+                        <div class="task-type">Refresh Parameters</div>
+                        <div class="task-device">HWTC12345678 - Huawei HG8245H</div>
+                    </div>
+                    <span class="task-status pending">Pending</span>
+                    <span class="task-time">2 min ago</span>
+                </div>
+
+                <div class="task-card">
+                    <div class="task-icon running"><i class="fas fa-spinner fa-spin"></i></div>
+                    <div class="task-info">
+                        <div class="task-type">Set WiFi SSID</div>
+                        <div class="task-device">ZTEGC87654321 - ZTE F660</div>
+                    </div>
+                    <span class="task-status running">Running</span>
+                    <span class="task-time">1 min ago</span>
+                </div>
+
+                <div class="task-card">
+                    <div class="task-icon completed"><i class="fas fa-check"></i></div>
+                    <div class="task-info">
+                        <div class="task-type">Reboot Device</div>
+                        <div class="task-device">FHTT11223344 - FiberHome AN5506</div>
+                    </div>
+                    <span class="task-status completed">Completed</span>
+                    <span class="task-time">5 min ago</span>
+                </div>
+
+                <div class="task-card">
+                    <div class="task-icon failed"><i class="fas fa-times"></i></div>
+                    <div class="task-info">
+                        <div class="task-type">Firmware Update</div>
+                        <div class="task-device">HWTC99887766 - Huawei HG8245H5</div>
+                    </div>
+                    <span class="task-status failed">Failed</span>
+                    <span class="task-time">10 min ago</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Sidebar Component - just include this script! -->
+    <script src="/static/js/sidebar.js"></script>
+
+    <script>
+        function filterTasks(status) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            // In real app, filter tasks by status
+        }
+
+        // Check auth
+        if (!localStorage.getItem('token')) {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+
+</html>

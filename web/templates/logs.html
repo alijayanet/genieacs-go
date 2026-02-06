@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <!-- Sidebar loaded via sidebar.js -->
+    <script src="/static/js/sidebar.js"></script>
+
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h1>System Logs</h1>
+                <p style="color: var(--gray); margin-top: 0.5rem;">View TR-069 and system activity logs</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="refreshLogs()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label>Filter by Type</label>
+                    <select id="logType" class="form-control" onchange="refreshLogs()">
+                        <option value="">All Types</option>
+                        <option value="info">Info</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                        <option value="success">Success</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label>Search</label>
+                    <input type="text" id="searchLog" class="form-control" placeholder="Search logs..."
+                        onkeyup="filterLogs()">
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label>Limit</label>
+                    <select id="logLimit" class="form-control" onchange="refreshLogs()">
+                        <option value="50">50 logs</option>
+                        <option value="100" selected>100 logs</option>
+                        <option value="200">200 logs</option>
+                        <option value="500">500 logs</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="card">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 180px;">Timestamp</th>
+                            <th style="width: 100px;">Type</th>
+                            <th style="width: 150px;">Device</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 2rem; color: var(--gray);">
+                                <i class="fas fa-spinner fa-spin"></i> Loading logs...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <style>
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--light);
+        }
+
+        .form-control {
+            padding: 0.75rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--light);
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .log-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .log-badge.info {
+            background: rgba(14, 165, 233, 0.1);
+            color: #0ea5e9;
+        }
+
+        .log-badge.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .log-badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .log-badge.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .log-message {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--light);
+        }
+    </style>
+
+    <script>
+        let allLogs = [];
+
+        async function refreshLogs() {
+            const limit = document.getElementById('logLimit').value;
+            const type = document.getElementById('logType').value;
+
+            try {
+                const params = new URLSearchParams({ limit });
+                if (type) params.append('type', type);
+
+                const response = await fetch(`/api/logs?${params}`);
+                if (!response.ok) throw new Error('Failed to load logs');
+
+                allLogs = await response.json();
+                renderLogs(allLogs);
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('logsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--danger);">
+                            <i class="fas fa-exclamation-triangle"></i> Error loading logs: ${error.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderLogs(logs) {
+            const tbody = document.getElementById('logsTableBody');
+
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--gray);">
+                            <i class="fas fa-inbox"></i> No logs found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => {
+                const timestamp = new Date(log.timestamp).toLocaleString();
+                const type = log.log_type || 'info';
+                const device = log.serial_number || log.device_id || '-';
+                const message = log.message || log.action || '';
+
+                return `
+                    <tr>
+                        <td>${timestamp}</td>
+                        <td><span class="log-badge ${type}">${type}</span></td>
+                        <td>${device}</td>
+                        <td class="log-message">${message}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterLogs() {
+            const searchTerm = document.getElementById('searchLog').value.toLowerCase();
+
+            if (!searchTerm) {
+                renderLogs(allLogs);
+                return;
+            }
+
+            const filtered = allLogs.filter(log => {
+                const message = (log.message || log.action || '').toLowerCase();
+                const device = (log.serial_number || log.device_id || '').toLowerCase();
+                return message.includes(searchTerm) || device.includes(searchTerm);
+            });
+
+            renderLogs(filtered);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', refreshLogs);
+
+        // Auto-refresh every 10 seconds
+        setInterval(refreshLogs, 10000);
+    </script>
+</body>
+
+</html>

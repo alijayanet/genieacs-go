@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packages - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .main-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .main-tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-weight: 500;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .main-tab.active {
+            color: var(--primary);
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .main-tab i {
+            margin-right: 8px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .package-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .package-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .package-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .package-card.popular {
+            border-color: var(--primary);
+        }
+
+        .package-card.popular::before {
+            content: 'POPULAR';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, #6366f1, #0ea5e9);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        .package-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .package-speed {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .package-speed span {
+            font-size: 1rem;
+            color: var(--gray);
+            font-weight: 400;
+        }
+
+        .package-price {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1rem 0;
+        }
+
+        .package-price small {
+            font-size: 0.875rem;
+            color: var(--gray);
+            font-weight: 400;
+        }
+
+        .package-features {
+            list-style: none;
+            margin: 1rem 0;
+            padding: 0;
+        }
+
+        .package-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+            color: var(--gray);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .package-features li i {
+            color: var(--success);
+        }
+
+        .package-profile {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        .package-profile-label {
+            font-size: 0.7rem;
+            color: var(--gray);
+            margin-bottom: 4px;
+        }
+
+        .package-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .package-actions .btn {
+            flex: 1;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        /* MikroTik / RADIUS Config */
+        .config-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .config-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .config-status.connected {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .config-status.disconnected {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .config-status i {
+            font-size: 0.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .profile-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .profile-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-icon.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .profile-icon.isolir {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .profile-name {
+            font-weight: 500;
+            font-family: monospace;
+        }
+
+        .profile-speed {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .sync-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            font-size: 0.75rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @media(max-width:1024px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Sidebar loaded via sidebar.js -->
+    <script src="/static/js/sidebar.js"></script>
+</head>
+
+<body>
+    <!-- Sidebar will be injected automatically by sidebar.js -->
+
+    <main class="main-content">
+        <div class="header">
+            <h1><i class="fas fa-cube"></i> Packages</h1>
+            <div style="display:flex;gap:0.75rem;">
+                <button class="btn btn-secondary" onclick="syncProfiles()">
+                    <i class="fas fa-sync"></i> Sync from MikroTik
+                </button>
+                <button class="btn btn-primary" onclick="showAddPackageModal()">
+                    <i class="fas fa-plus"></i> Add Package
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Tabs -->
+        <div class="main-tabs">
+            <button class="main-tab active" onclick="switchTab('packages')">
+                <i class="fas fa-cube"></i> Internet Packages
+            </button>
+            <button class="main-tab" onclick="switchTab('pppoe')">
+                <i class="fas fa-network-wired"></i> PPPoE Profiles
+            </button>
+            <button class="main-tab" onclick="switchTab('mikrotik')">
+                <i class="fas fa-server"></i> MikroTik
+            </button>
+            <button class="main-tab" onclick="switchTab('radius')">
+                <i class="fas fa-user-shield"></i> RADIUS
+            </button>
+            <button class="main-tab" onclick="switchTab('notifications')">
+                <i class="fas fa-bell"></i> Notifications
+            </button>
+        </div>
+
+        <!-- Packages Tab -->
+        <div id="packagesPanel" class="tab-panel active">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" style="color:#6366f1;" id="statTotalPackages">0</div>
+                    <div class="stat-label">Total Packages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color:#10b981;" id="statTotalSubscribers">0</div>
+                    <div class="stat-label">Active Subscribers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color:#0ea5e9;" id="statTotalRevenue">Rp 0</div>
+                    <div class="stat-label">Monthly Revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color:#f59e0b;" id="statPopularPackage">-</div>
+                    <div class="stat-label">Most Popular</div>
+                </div>
+            </div>
+
+            <div class="package-grid" id="packageGrid">
+                <!-- Dynamic Content -->
+                <div class="loading-state"
+                    style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--gray);">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p style="margin-top: 1rem;">Loading packages...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PPPoE Profiles Tab -->
+        <div id="pppoePanel" class="tab-panel">
+            <div class="config-section">
+                <div class="config-header">
+                    <h3><i class="fas fa-network-wired" style="color:var(--primary);"></i> PPPoE Profiles from MikroTik
+                    </h3>
+                    <button class="btn btn-secondary sync-btn" onclick="syncProfiles()">
+                        <i class="fas fa-sync"></i> Sync Now
+                    </button>
+                </div>
+                <p style="color:var(--gray);margin-bottom:1rem;">
+                    Last synced: <strong>5 minutes ago</strong> | Source: <strong>192.168.88.1</strong>
+                </p>
+
+                <div class="profile-list">
+                    <div class="profile-item">
+                        <div class="profile-info">
+                            <div class="profile-icon active"><i class="fas fa-wifi"></i></div>
+                            <div>
+                                <div class="profile-name">pppoe-10mbps</div>
+                                <div class="profile-speed">Rate: 10M/3M | Local: 192.168.100.0/24</div>
+                            </div>
+                        </div>
+                        <span style="color:var(--gray);font-size:0.8rem;">23 active</span>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-info">
+                            <div class="profile-icon active"><i class="fas fa-wifi"></i></div>
+                            <div>
+                                <div class="profile-name">pppoe-20mbps</div>
+                                <div class="profile-speed">Rate: 20M/5M | Local: 192.168.100.0/24</div>
+                            </div>
+                        </div>
+                        <span style="color:var(--gray);font-size:0.8rem;">67 active</span>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-info">
+                            <div class="profile-icon active"><i class="fas fa-wifi"></i></div>
+                            <div>
+                                <div class="profile-name">pppoe-50mbps</div>
+                                <div class="profile-speed">Rate: 50M/10M | Local: 192.168.100.0/24</div>
+                            </div>
+                        </div>
+                        <span style="color:var(--gray);font-size:0.8rem;">35 active</span>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-info">
+                            <div class="profile-icon active"><i class="fas fa-wifi"></i></div>
+                            <div>
+                                <div class="profile-name">pppoe-100mbps</div>
+                                <div class="profile-speed">Rate: 100M/20M | Local: 192.168.101.0/24</div>
+                            </div>
+                        </div>
+                        <span style="color:var(--gray);font-size:0.8rem;">15 active</span>
+                    </div>
+
+                    <div class="profile-item" style="background:rgba(239,68,68,0.1);">
+                        <div class="profile-info">
+                            <div class="profile-icon isolir"><i class="fas fa-ban"></i></div>
+                            <div>
+                                <div class="profile-name">pppoe-isolir</div>
+                                <div class="profile-speed">Rate: 1M/256K | Local: 192.168.99.0/24</div>
+                            </div>
+                        </div>
+                        <span style="color:#ef4444;font-size:0.8rem;">8 suspended</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:1rem;"><i class="fas fa-plus" style="color:var(--primary);"></i> Create PPPoE
+                    Profile</h3>
+                <form id="pppoeForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Profile Name</label>
+                            <input type="text" placeholder="pppoe-30mbps">
+                        </div>
+                        <div class="form-group">
+                            <label>Rate Limit (down/up)</label>
+                            <input type="text" placeholder="30M/8M">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Local Address Pool</label>
+                            <input type="text" placeholder="192.168.100.0/24">
+                        </div>
+                        <div class="form-group">
+                            <label>DNS Server</label>
+                            <input type="text" placeholder="8.8.8.8, 1.1.1.1">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create on MikroTik
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- MikroTik Tab -->
+        <div id="mikrotikPanel" class="tab-panel">
+            <div class="config-section">
+                <div class="config-header">
+                    <h3><i class="fas fa-server" style="color:#f59e0b;"></i> MikroTik Router Configuration</h3>
+                    <span class="config-status connected">
+                        <i class="fas fa-circle"></i> Connected
+                    </span>
+                </div>
+
+                <form id="mikrotikForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Router IP Address</label>
+                            <input type="text" name="mikrotik_host" id="mt_host" value="192.168.88.1"
+                                placeholder="192.168.88.1">
+                        </div>
+                        <div class="form-group">
+                            <label>API Port</label>
+                            <input type="number" name="mikrotik_port" id="mt_port" value="8728" placeholder="8728">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" name="mikrotik_user" id="mt_user" value="admin" placeholder="admin">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" name="mikrotik_pass" id="mt_pass" placeholder="Password">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:0.75rem;">
+                        <button type="button" class="btn btn-secondary" onclick="testMikrotik()">
+                            <i class="fas fa-plug"></i> Test Connection
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Configuration
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:1rem;"><i class="fas fa-terminal" style="color:var(--secondary);"></i> MikroTik
+                    API Commands</h3>
+                <p style="color:var(--gray);margin-bottom:1rem;">
+                    GO-ACS uses the MikroTik RouterOS API to manage PPPoE profiles and secrets directly.
+                </p>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>API Command</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>List Profiles</td>
+                            <td><code>/ppp/profile/print</code></td>
+                            <td>Get all PPPoE profiles</td>
+                        </tr>
+                        <tr>
+                            <td>Change Profile</td>
+                            <td><code>/ppp/secret/set</code></td>
+                            <td>Change user's profile (isolir/aktivasi)</td>
+                        </tr>
+                        <tr>
+                            <td>Active Sessions</td>
+                            <td><code>/ppp/active/print</code></td>
+                            <td>List active PPPoE sessions</td>
+                        </tr>
+                        <tr>
+                            <td>Disconnect User</td>
+                            <td><code>/ppp/active/remove</code></td>
+                            <td>Force disconnect user</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RADIUS Tab -->
+        <div id="radiusPanel" class="tab-panel">
+            <div class="config-section">
+                <div class="config-header">
+                    <h3><i class="fas fa-user-shield" style="color:#10b981;"></i> RADIUS Server Configuration</h3>
+                    <span class="config-status disconnected">
+                        <i class="fas fa-circle"></i> Not Configured
+                    </span>
+                </div>
+
+                <div style="padding:2rem;text-align:center;color:var(--gray);">
+                    <i class="fas fa-user-shield" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i>
+                    <p>RADIUS integration is optional and can be used for centralized authentication.</p>
+                </div>
+
+                <form id="radiusForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>RADIUS Server IP</label>
+                            <input type="text" name="radius_host" id="rad_host" placeholder="127.0.0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Auth Port</label>
+                            <input type="number" name="radius_auth_port" id="rad_auth_port" value="1812"
+                                placeholder="1812">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Accounting Port</label>
+                            <input type="number" name="radius_acct_port" id="rad_acct_port" value="1813"
+                                placeholder="1813">
+                        </div>
+                        <div class="form-group">
+                            <label>Secret Key</label>
+                            <input type="password" name="radius_secret" id="rad_secret" placeholder="RADIUS secret">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:0.75rem;">
+                        <button type="button" class="btn btn-secondary" onclick="testRadius()">
+                            <i class="fas fa-plug"></i> Test Connection
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Configuration
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:1rem;"><i class="fas fa-info-circle" style="color:var(--secondary);"></i>
+                    RADIUS vs MikroTik API</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>MikroTik API</th>
+                            <th>RADIUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Setup Complexity</td>
+                            <td><span style="color:#10b981;">Simple</span></td>
+                            <td><span style="color:#f59e0b;">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td>Centralized Auth</td>
+                            <td><span style="color:#ef4444;">No</span></td>
+                            <td><span style="color:#10b981;">Yes</span></td>
+                        </tr>
+                        <tr>
+                            <td>Multi-Router</td>
+                            <td><span style="color:#f59e0b;">Manual</span></td>
+                            <td><span style="color:#10b981;">Automatic</span></td>
+                        </tr>
+                        <tr>
+                            <td>Session Accounting</td>
+                            <td><span style="color:#f59e0b;">Limited</span></td>
+                            <td><span style="color:#10b981;">Full</span></td>
+                        </tr>
+                        <tr>
+                            <td>Recommended For</td>
+                            <td>Small ISP (<500 users)</td>
+                            <td>Large ISP (>500 users)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div id="notificationsPanel" class="tab-panel">
+            <div class="config-section">
+                <div class="config-header">
+                    <h3><i class="fas fa-bell" style="color:#f59e0b;"></i> Notification Settings</h3>
+                    <p style="color:var(--gray);font-size:0.9rem;">Configure how customers receive receipts and alerts.
+                    </p>
+                </div>
+
+                <form id="notificationForm" onsubmit="saveNotifications(event)">
+                    <h4 style="margin: 1.5rem 0 1rem; color: var(--primary);"><i class="fab fa-whatsapp"></i> WhatsApp
+                        (Fonnte)</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>API Key</label>
+                            <input type="password" name="wa_api_key" id="wa_api_key"
+                                placeholder="Enter your Fonnte API Key">
+                        </div>
+                        <div class="form-group">
+                            <label>Provider URL</label>
+                            <input type="text" name="wa_provider_url" id="wa_provider_url"
+                                value="https://api.fonnte.com/send">
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 2rem 0 1rem; color: #f59e0b;"><i class="fas fa-fire"></i> Firebase Cloud
+                        Messaging (FCM)</h4>
+                    <div class="config-info"
+                        style="background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.3); padding:1rem; border-radius:10px; margin-bottom:1.5rem;">
+                        <p style="font-size:0.85rem; color:#f59e0b;">
+                            <i class="fas fa-info-circle"></i> <strong>PENTING:</strong>
+                            Letakkan file <code>firebase-service-account.json</code> di folder root aplikasi (selevel
+                            dengan binary go-acs).
+                            Aplikasi akan mendeteksi file ini secara otomatis saat startup.
+                        </p>
+                    </div>
+
+                    <div style="display:flex;gap:0.75rem;margin-top:2rem;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Notification Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Package Modal -->
+    <div class="modal-overlay" id="addPackageModal">
+        <div class="modal" style="max-width:600px;">
+            <h2><i class="fas fa-cube"></i> Add New Package</h2>
+            <form id="addPackageForm">
+                <input type="hidden" id="pkgEditId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Package Name *</label>
+                        <input type="text" id="pkgName" required placeholder="Home 30 Mbps">
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Price (Rp) *</label>
+                        <input type="number" id="pkgPrice" required placeholder="300000">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Download Speed (Mbps) *</label>
+                        <input type="number" id="pkgDown" required placeholder="30">
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Speed (Mbps) *</label>
+                        <input type="number" id="pkgUp" required placeholder="8">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Link to MikroTik PPPoE Profile *</label>
+                    <select id="pkgProfile" required
+                        style="width:100%;padding:12px;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;color:var(--light);">
+                        <option value="">Select PPPoE profile...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="pkgDesc" placeholder="Package features and benefits..."
+                        style="width:100%;padding:12px;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;color:var(--light);min-height:80px;"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Package</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(tab + 'Panel').classList.add('active');
+        }
+
+        let packages = [];
+
+        async function loadPackages() {
+            try {
+                const res = await fetch('/api/packages', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const result = await res.json();
+                packages = result.data || result || [];
+                renderPackages();
+                updateStats();
+            } catch (err) {
+                console.error('Failed to load packages:', err);
+                document.getElementById('packageGrid').innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #ef4444;">Failed to load packages</div>';
+            }
+        }
+
+        function renderPackages() {
+            const grid = document.getElementById('packageGrid');
+            if (packages.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--gray);">No packages found</div>';
+                return;
+            }
+
+            grid.innerHTML = packages.map(pkg => `
+                <div class="package-card">
+                    <div class="package-name">${pkg.name}</div>
+                    <div class="package-speed">${pkg.download_speed} <span>Mbps</span></div>
+                    <div class="package-price">${formatCurrency(pkg.price)} <small>/bulan</small></div>
+                    <div class="package-profile">
+                        <div class="package-profile-label">PPPoE Profile</div>
+                        ${pkg.description?.includes('Profile:') ? pkg.description.split('Profile:')[1] : 'pppoe-custom'}
+                    </div>
+                    <ul class="package-features">
+                        <li><i class="fas fa-check"></i> Download: ${pkg.download_speed} Mbps</li>
+                        <li><i class="fas fa-check"></i> Upload: ${pkg.upload_speed} Mbps</li>
+                        <li><i class="fas fa-check"></i> Status: ${pkg.isActive ? 'Active' : 'Hidden'}</li>
+                    </ul>
+                    <div class="package-actions">
+                        <button class="btn btn-secondary" onclick="editPackage(${pkg.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-secondary" onclick="deletePackage(${pkg.id}, '${pkg.name.replace("'", "\\'")}')" style="color:#ef4444;"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+        }
+
+        function updateStats() {
+            document.getElementById('statTotalPackages').textContent = packages.length;
+            const totalSubscribers = packages.reduce((acc, p) => acc + (p.subscribers || 0), 0);
+            document.getElementById('statTotalSubscribers').textContent = totalSubscribers;
+            const revenue = packages.reduce((acc, p) => acc + (p.price * (p.subscribers || 0)), 0);
+            document.getElementById('statTotalRevenue').textContent = formatCurrency(revenue);
+        }
+
+        function showAddPackageModal() {
+            document.getElementById('pkgEditId').value = '';
+            document.getElementById('addPackageForm').reset();
+            document.querySelector('#addPackageModal h2').innerHTML = '<i class="fas fa-cube"></i> Add New Package';
+            document.getElementById('addPackageModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('addPackageModal').classList.remove('active');
+        }
+
+        function editPackage(id) {
+            const pkg = packages.find(p => p.id === id);
+            if (!pkg) return;
+
+            document.getElementById('pkgEditId').value = id;
+            document.getElementById('pkgName').value = pkg.name;
+            document.getElementById('pkgPrice').value = pkg.price;
+            document.getElementById('pkgDown').value = pkg.download_speed;
+            document.getElementById('pkgUp').value = pkg.upload_speed;
+            document.getElementById('pkgDesc').value = pkg.description;
+
+            document.querySelector('#addPackageModal h2').innerHTML = '<i class="fas fa-edit"></i> Edit Package';
+            document.getElementById('addPackageModal').classList.add('active');
+        }
+
+        async function deletePackage(id, name) {
+            if (!confirm(`Are you sure you want to delete package "${name}"?`)) return;
+
+            try {
+                const res = await fetch(`/api/packages/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (res.ok) {
+                    loadPackages();
+                } else {
+                    alert('Failed to delete package');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function syncProfiles() {
+            try {
+                const res = await fetch('/api/mikrotik/profiles', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const profiles = await res.json();
+
+                // Update Select in Modal
+                const select = document.getElementById('pkgProfile');
+                if (select) {
+                    select.innerHTML = '<option value="">Select PPPoE profile...</option>' +
+                        profiles.map(p => `<option value="${p.name}">${p.name} (${p['rate-limit'] || 'no limit'})</option>`).join('');
+                }
+
+                // Update Profiles List Panel
+                const list = document.querySelector('.profile-list');
+                if (list) {
+                    list.innerHTML = profiles.map(p => `
+                        <div class="profile-item">
+                            <div class="profile-info">
+                                <div class="profile-icon active"><i class="fas fa-wifi"></i></div>
+                                <div>
+                                    <div class="profile-name">${p.name}</div>
+                                    <div class="profile-speed">Rate: ${p['rate-limit'] || 'Unlimited'} | Local: ${p['local-address'] || '-'}</div>
+                                </div>
+                            </div>
+                            <span style="color:var(--gray);font-size:0.8rem;">${p['remote-address'] || 'Dynamic Pool'}</span>
+                        </div>
+                    `).join('');
+                }
+
+                alert('Profiles synced from MikroTik!');
+            } catch (err) {
+                console.error('Sync error:', err);
+                alert('Failed to sync profiles. Make sure MikroTik is connected.');
+            }
+        }
+
+        async function testMikrotik() {
+            try {
+                const res = await fetch('/api/mikrotik/test', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert(`✓ Connected to ${result.host}\n✓ Board: ${result.board}\n✓ OS Version: ${result.version}\n✓ Uptime: ${result.uptime}`);
+                } else {
+                    alert('✗ Connection failed: ' + result.error);
+                }
+            } catch (err) {
+                alert('Connection error: ' + err.message);
+            }
+        }
+
+        function testRadius() {
+            alert('Testing RADIUS connection...\n\n✗ Connection failed\nPlease check RADIUS server configuration.');
+        }
+
+        document.getElementById('addPackageForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('pkgEditId').value;
+            const data = {
+                name: document.getElementById('pkgName').value,
+                price: parseFloat(document.getElementById('pkgPrice').value),
+                download_speed: parseInt(document.getElementById('pkgDown').value),
+                upload_speed: parseInt(document.getElementById('pkgUp').value),
+                description: document.getElementById('pkgDesc').value + "\nProfile:" + document.getElementById('pkgProfile').value,
+                isActive: true
+            };
+
+            try {
+                const url = id ? `/api/packages/${id}` : '/api/packages';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    closeModal();
+                    loadPackages();
+                } else {
+                    const err = await res.json();
+                    alert('Error: ' + (err.error || 'Failed to save'));
+                }
+            } catch (err) {
+                alert('Connection error');
+            }
+        };
+
+        document.getElementById('mikrotikForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('MikroTik configuration saved successfully!');
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (err) {
+                alert('Connection error: ' + err.message);
+            }
+        };
+
+        document.getElementById('radiusForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('RADIUS configuration saved successfully!');
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (err) {
+                alert('Connection error: ' + err.message);
+            }
+        };
+
+        document.getElementById('pppoeForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = {
+                name: e.target.querySelector('input[placeholder="pppoe-30mbps"]').value,
+                rate_limit: e.target.querySelector('input[placeholder="30M/8M"]').value
+            };
+
+            try {
+                const res = await fetch('/api/mikrotik/profiles', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    alert('PPPoE profile created on MikroTik!');
+                    syncProfiles();
+                    e.target.reset();
+                } else {
+                    const err = await res.json();
+                    alert('Error: ' + (err.error || 'Failed to create'));
+                }
+            } catch (err) {
+                alert('Connection error');
+            }
+        };
+
+        async function saveNotifications(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Notification settings saved successfully!');
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (err) {
+                alert('Connection error: ' + err.message);
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/settings', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const settings = await res.json();
+
+                // Populate MikroTik
+                if (settings.mikrotik_host) document.getElementById('mt_host').value = settings.mikrotik_host;
+                if (settings.mikrotik_port) document.getElementById('mt_port').value = settings.mikrotik_port;
+                if (settings.mikrotik_user) document.getElementById('mt_user').value = settings.mikrotik_user;
+
+                // Populate Radius
+                if (settings.radius_host) document.getElementById('rad_host').value = settings.radius_host;
+                if (settings.radius_auth_port) document.getElementById('rad_auth_port').value = settings.radius_auth_port;
+                if (settings.radius_acct_port) document.getElementById('rad_acct_port').value = settings.radius_acct_port;
+
+                // Populate Notifications
+                if (settings.wa_api_key) document.getElementById('wa_api_key').value = settings.wa_api_key;
+                if (settings.wa_provider_url) document.getElementById('wa_provider_url').value = settings.wa_provider_url;
+            } catch (err) {
+                console.error('Failed to load settings:', err);
+            }
+        }
+
+        loadPackages();
+        loadSettings();
+        syncProfiles();
+
+        if (!localStorage.getItem('token')) location = '/';
+    </script>
+</body>
+
+</html>

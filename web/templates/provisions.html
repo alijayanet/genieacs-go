@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provisions - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .provision-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .provision-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .provision-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .provision-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-vendor {
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+        }
+
+        .badge-general {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .provision-desc {
+            color: var(--gray);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .provision-params {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .param-item {
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .param-item:last-child {
+            border-bottom: none;
+        }
+
+        .param-path {
+            color: #0ea5e9;
+        }
+
+        .param-action {
+            color: #f59e0b;
+            margin-right: 8px;
+        }
+
+        .param-refresh {
+            color: var(--gray);
+            font-size: 0.7rem;
+        }
+
+        .virtual-params {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .vp-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .vp-name {
+            font-weight: 600;
+            color: #818cf8;
+            margin-bottom: 0.5rem;
+        }
+
+        .vp-paths {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: var(--gray);
+        }
+    </style>
+    <!-- Sidebar loaded via sidebar.js -->
+    <script src="/static/js/sidebar.js"></script>
+</head>
+
+<body>
+    <!-- Sidebar will be injected automatically by sidebar.js -->
+
+    <main class="main-content">
+        <div class="header">
+            <h1>Provisioning Scripts</h1>
+            <button class="btn btn-primary"><i class="fas fa-plus"></i> Create Provision</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('provisions')">Provisions</button>
+            <button class="tab" onclick="showTab('virtual')">Virtual Parameters</button>
+        </div>
+
+        <div id="provisions" class="tab-content active">
+            <!-- Basic Info Provision -->
+            <div class="provision-card">
+                <div class="provision-header">
+                    <span class="provision-name">📊 basic-info</span>
+                    <span class="provision-badge badge-general">All Devices</span>
+                </div>
+                <p class="provision-desc">Collect basic device information from all devices (except MikroTik)</p>
+                <div class="provision-params">
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">DeviceID.Manufacturer</span> <span class="param-refresh">(daily)</span>
+                    </div>
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">DeviceID.ProductClass</span> <span class="param-refresh">(daily)</span>
+                    </div>
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.DeviceInfo.HardwareVersion</span> <span
+                            class="param-refresh">(daily)</span></div>
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.DeviceInfo.SoftwareVersion</span> <span
+                            class="param-refresh">(daily)</span></div>
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.DeviceInfo.UpTime</span> <span
+                            class="param-refresh">(1 min)</span></div>
+                </div>
+            </div>
+
+            <!-- WiFi Config Provision -->
+            <div class="provision-card">
+                <div class="provision-header">
+                    <span class="provision-name">📶 wifi-config</span>
+                    <span class="provision-badge badge-general">All Devices</span>
+                </div>
+                <p class="provision-desc">Monitor WiFi configuration and settings</p>
+                <div class="provision-params">
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.SSID</span> <span
+                            class="param-refresh">(hourly)</span></div>
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.PreSharedKey.1.KeyPassphrase</span>
+                        <span class="param-refresh">(hourly)</span>
+                    </div>
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.Enable</span> <span
+                            class="param-refresh">(hourly)</span></div>
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.Channel</span>
+                        <span class="param-refresh">(hourly)</span>
+                    </div>
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.LANDevice.1.WLANConfiguration.*.BeaconType</span>
+                        <span class="param-refresh">(hourly)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Huawei Specific -->
+            <div class="provision-card">
+                <div class="provision-header">
+                    <span class="provision-name">🔧 huawei-specific</span>
+                    <span class="provision-badge badge-vendor">Huawei Only</span>
+                </div>
+                <p class="provision-desc">Huawei device specific parameters and remote access configuration</p>
+                <div class="provision-params">
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower</span>
+                        <span class="param-refresh">(1 min)</span>
+                    </div>
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.DeviceInfo.X_HW_SerialNumber</span> <span
+                            class="param-refresh">(daily)</span></div>
+                    <div class="param-item"><span class="param-action">✏️</span><span
+                            class="param-path">InternetGatewayDevice.X_HW_Security.AclServices.HTTPWanEnable</span> =
+                        true</div>
+                    <div class="param-item"><span class="param-action">✏️</span><span
+                            class="param-path">InternetGatewayDevice.X_HW_Security.AclServices.TELNETWanEnable</span> =
+                        true</div>
+                    <div class="param-item"><span class="param-action">✏️</span><span
+                            class="param-path">InternetGatewayDevice.X_HW_Security.X_HW_FirewallLevel</span> = Custom
+                    </div>
+                </div>
+            </div>
+
+            <!-- ZTE Specific -->
+            <div class="provision-card">
+                <div class="provision-header">
+                    <span class="provision-name">🔧 zte-specific</span>
+                    <span class="provision-badge badge-vendor">ZTE Only</span>
+                </div>
+                <p class="provision-desc">ZTE device specific parameters and remote access configuration</p>
+                <div class="provision-params">
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.WANDevice.1.X_ZTE-COM_WANPONInterfaceConfig.RXPower</span>
+                        <span class="param-refresh">(1 min)</span>
+                    </div>
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.WANDevice.*.WANConnectionDevice.*.WANPPPConnection.*.X_ZTE-COM_VLANID</span>
+                        <span class="param-refresh">(hourly)</span>
+                    </div>
+                    <div class="param-item"><span class="param-action">✏️</span><span
+                            class="param-path">InternetGatewayDevice.Firewall.X_ZTE-COM_ServiceControl.IPV4ServiceControl.1.ServiceType</span>
+                        = HTTP</div>
+                    <div class="param-item"><span class="param-action">✏️</span><span
+                            class="param-path">InternetGatewayDevice.Firewall.X_ZTE-COM_ServiceControl.IPV4ServiceControl.1.Ingress</span>
+                        = WAN_ALL</div>
+                    <div class="param-item"><span class="param-action">✏️</span><span
+                            class="param-path">InternetGatewayDevice.Firewall.X_ZTE-COM_ServiceControl.IPV4ServiceControl.1.Enable</span>
+                        = true</div>
+                </div>
+            </div>
+
+            <!-- FiberHome Specific -->
+            <div class="provision-card">
+                <div class="provision-header">
+                    <span class="provision-name">🔧 fiberhome-specific</span>
+                    <span class="provision-badge badge-vendor">FiberHome Only</span>
+                </div>
+                <p class="provision-desc">FiberHome device specific parameters and ACL configuration</p>
+                <div class="provision-params">
+                    <div class="param-item"><span class="param-action">📖</span><span
+                            class="param-path">InternetGatewayDevice.WANDevice.1.X_FH_GponInterfaceConfig.RXPower</span>
+                        <span class="param-refresh">(1 min)</span>
+                    </div>
+                    <div class="param-item"><span class="param-action">✏️</span><span
+                            class="param-path">InternetGatewayDevice.X_FH_ACL.Enable</span> = 1</div>
+                    <div class="param-item"><span class="param-action">✏️</span><span
+                            class="param-path">InternetGatewayDevice.X_FH_FireWall.REMOTEACCEnable</span> = true</div>
+                    <div class="param-item"><span class="param-action">✏️</span><span
+                            class="param-path">InternetGatewayDevice.X_FH_ACL.Rule.1.Enable</span> = 1</div>
+                    <div class="param-item"><span class="param-action">✏️</span><span
+                            class="param-path">InternetGatewayDevice.X_FH_ACL.Rule.1.Protocol</span> = ALL</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="virtual" class="tab-content">
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3>Virtual Parameters</h3>
+                <p style="color: var(--gray); margin-bottom: 1rem;">Virtual parameters extract and normalize data from
+                    different vendor-specific paths.</p>
+            </div>
+
+            <div class="virtual-params">
+                <div class="vp-card">
+                    <div class="vp-name">RXPower</div>
+                    <div class="vp-paths">
+                        X_CT-COM_GponInterfaceConfig.RXPower<br>
+                        X_ZTE-COM_WANPONInterfaceConfig.RXPower<br>
+                        X_FH_GponInterfaceConfig.RXPower
+                    </div>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-name">pppoeUsername</div>
+                    <div class="vp-paths">WANPPPConnection.*.Username</div>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-name">pppoeIP</div>
+                    <div class="vp-paths">WANPPPConnection.*.ExternalIPAddress</div>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-name">SSID</div>
+                    <div class="vp-paths">WLANConfiguration.1.SSID</div>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-name">WlanPassword</div>
+                    <div class="vp-paths">WLANConfiguration.1.PreSharedKey.1.KeyPassphrase</div>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-name">getSerialNumber</div>
+                    <div class="vp-paths">DeviceInfo.SerialNumber<br>DeviceInfo.X_HW_SerialNumber</div>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-name">getdeviceuptime</div>
+                    <div class="vp-paths">DeviceInfo.UpTime</div>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-name">getponmode</div>
+                    <div class="vp-paths">GponInterfaceConfig / EponInterfaceConfig</div>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-name">activedevices</div>
+                    <div class="vp-paths">LANDevice.*.Hosts.Host.*</div>
+                </div>
+                <div class="vp-card">
+                    <div class="vp-name">Temperature</div>
+                    <div class="vp-paths">GponInterfaceConfig.Temperature<br>X_HW_Temperature</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[onclick="showTab('${tab}')"]`).classList.add('active');
+            document.getElementById(tab).classList.add('active');
+        }
+
+        if (!localStorage.getItem('token')) location = '/';
+    </script>
+</body>
+
+</html>

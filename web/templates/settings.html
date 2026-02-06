@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <!-- Sidebar loaded via sidebar.js -->
+    <script src="/static/js/sidebar.js"></script>
+
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h1>System Settings</h1>
+                <p style="color: var(--gray); margin-top: 0.5rem;">Configure your GO-ACS system</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    <i class="fas fa-save"></i>
+                    Save Settings
+                </button>
+            </div>
+        </div>
+
+        <div class="settings-container" style="max-width: 1200px;">
+            <!-- MikroTik Settings -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-router"></i> MikroTik Configuration</h2>
+                </div>
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label>MikroTik Host</label>
+                        <input type="text" id="mikrotik_host" class="form-control" placeholder="192.168.88.1">
+                    </div>
+                    <div class="form-group">
+                        <label>MikroTik Port</label>
+                        <input type="number" id="mikrotik_port" class="form-control" placeholder="8728">
+                    </div>
+                    <div class="form-group">
+                        <label>MikroTik Username</label>
+                        <input type="text" id="mikrotik_user" class="form-control" placeholder="admin">
+                    </div>
+                    <div class="form-group">
+                        <label>MikroTik Password</label>
+                        <input type="password" id="mikrotik_pass" class="form-control">
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="testMikrotik()" style="margin-top: 1rem;">
+                    <i class="fas fa-check-circle"></i> Test Connection
+                </button>
+            </div>
+
+            <!-- Payment Gateway Settings -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-credit-card"></i> Payment Gateway (Tripay)</h2>
+                </div>
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="text" id="tripay_api_key" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Private Key</label>
+                        <input type="text" id="tripay_private_key" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Merchant Code</label>
+                        <input type="text" id="tripay_merchant_code" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Mode</label>
+                        <select id="tripay_mode" class="form-control">
+                            <option value="sandbox">Sandbox</option>
+                            <option value="production">Production</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WhatsApp Gateway Settings -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fab fa-whatsapp"></i> WhatsApp Gateway (Fonnte)</h2>
+                </div>
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label>API URL</label>
+                        <input type="text" id="wa_provider_url" class="form-control"
+                            placeholder="https://api.fonnte.com/send">
+                    </div>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="text" id="wa_api_key" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Firebase Cloud Messaging -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-bell"></i> Firebase Cloud Messaging</h2>
+                </div>
+                <div class="form-group">
+                    <label>Service Account File Path</label>
+                    <input type="text" id="firebase_credentials_file" class="form-control"
+                        placeholder="firebase-service-account.json">
+                    <small style="color: var(--gray);">Upload your Firebase service account JSON to the server</small>
+                </div>
+            </div>
+
+            <!-- System Settings -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-cog"></i> System Configuration</h2>
+                </div>
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" id="company_name" class="form-control" placeholder="Your ISP Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Company Email</label>
+                        <input type="email" id="company_email" class="form-control" placeholder="contact@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Company Phone</label>
+                        <input type="text" id="company_phone" class="form-control" placeholder="+62xxx">
+                    </div>
+                    <div class="form-group">
+                        <label>Currency</label>
+                        <select id="currency" class="form-control">
+                            <option value="IDR">IDR (Rp)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Password -->
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-key"></i> Admin Password</h2>
+                </div>
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="admin_username" class="form-control password-input" value="admin"
+                            readonly style="background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" id="current_password" class="form-control password-input"
+                            placeholder="Enter current password">
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="new_password" class="form-control password-input"
+                            placeholder="Enter new password (min 6 chars)">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirm_password" class="form-control password-input"
+                            placeholder="Confirm new password">
+                    </div>
+                </div>
+                <button class="btn btn-warning" onclick="changePassword()" style="margin-top: 1rem;">
+                    <i class="fas fa-lock"></i> Change Password
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <style>
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--light);
+        }
+
+        .form-control {
+            padding: 0.75rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--light);
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        @media (max-width: 768px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script>
+        // Load settings on page load
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/settings');
+                if (!response.ok) throw new Error('Failed to load settings');
+
+                const settings = await response.json();
+
+                // Populate form fields
+                Object.keys(settings).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = settings[key] || '';
+                    }
+                });
+
+                console.log('Settings loaded successfully');
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                alert('Failed to load settings: ' + error.message);
+            }
+        }
+
+        // Save settings
+        async function saveSettings() {
+            const settings = {};
+            const inputs = document.querySelectorAll('.form-control:not(.password-input)');
+
+            inputs.forEach(input => {
+                if (input.id) {
+                    settings[input.id] = input.value;
+                }
+            });
+
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (!response.ok) throw new Error('Failed to save settings');
+
+                alert('Settings saved successfully!');
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                alert('Failed to save settings: ' + error.message);
+            }
+        }
+
+        // Test MikroTik connection
+        async function testMikrotik() {
+            try {
+                const response = await fetch('/api/mikrotik/test');
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✓ MikroTik connection successful!\n\nIdentity: ' + result.identity);
+                } else {
+                    alert('✗ MikroTik connection failed:\n' + result.error);
+                }
+            } catch (error) {
+                console.error('Error testing MikroTik:', error);
+                alert('Failed to test connection: ' + error.message);
+            }
+        }
+
+        // Change admin password
+        async function changePassword() {
+            const username = document.getElementById('admin_username').value;
+            const currentPassword = document.getElementById('current_password').value;
+            const newPassword = document.getElementById('new_password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+
+            // Validation
+            if (!currentPassword) {
+                alert('Please enter your current password');
+                return;
+            }
+
+            if (!newPassword) {
+                alert('Please enter a new password');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alert('New password must be at least 6 characters');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/settings/password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('✓ Password changed successfully!\n\nPlease use your new password for the next login.');
+                    // Clear password fields
+                    document.getElementById('current_password').value = '';
+                    document.getElementById('new_password').value = '';
+                    document.getElementById('confirm_password').value = '';
+                } else {
+                    alert('✗ Failed to change password:\n' + (result.error || result.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                alert('Failed to change password: ' + error.message);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadSettings);
+    </script>
+</body>
+
+</html>

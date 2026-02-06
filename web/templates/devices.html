@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devices - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .client-badge {
+            font-size: 0.75rem;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .rx-power {
+            margin-top: 0.75rem;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .rx-power.excellent {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .rx-power.good {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .rx-power.weak {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .rx-power.unknown {
+            background: rgba(107, 114, 128, 0.15);
+            color: #6b7280;
+        }
+
+        .template {
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 4px 0;
+        }
+    </style>
+    <!-- Sidebar loaded via sidebar.js -->
+    <script src="/static/js/sidebar.js"></script>
+</head>
+
+<body>
+    <!-- Sidebar will be injected automatically by sidebar.js -->
+
+    <main class="main-content">
+        <div class="header">
+            <h1>Devices</h1>
+            <button class="btn btn-primary" onclick="showAddModal()"><i class="fas fa-plus"></i> Add Device</button>
+        </div>
+
+        <div class="filters">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search..." oninput="loadDevices()">
+            </div>
+            <select id="statusFilter" class="filter-select" onchange="loadDevices()">
+                <option value="">All Status</option>
+                <option value="online">Online</option>
+                <option value="offline">Offline</option>
+            </select>
+        </div>
+
+        <div id="deviceGrid" class="device-grid"></div>
+    </main>
+
+    <div class="modal-overlay" id="addModal">
+        <div class="modal">
+            <h2>Add Device</h2>
+            <form id="addForm">
+                <div class="form-group">
+                    <label>Serial Number</label>
+                    <input type="text" id="serialNumber" required>
+                </div>
+                <div class="form-group">
+                    <label>Manufacturer</label>
+                    <input type="text" id="manufacturer" placeholder="ZTE, Huawei, etc">
+                </div>
+                <div class="form-group">
+                    <label>Model</label>
+                    <input type="text" id="modelName">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function formatUptime(totalSecs) {
+            if (!totalSecs || totalSecs <= 0) return '0d 00:00:00';
+            let days = Math.floor(totalSecs / 86400);
+            let rem = totalSecs % 86400;
+            let hrs = Math.floor(rem / 3600);
+            rem = rem % 3600;
+            let mins = Math.floor(rem / 60);
+            let secs = rem % 60;
+
+            const h = hrs.toString().padStart(2, '0');
+            const m = mins.toString().padStart(2, '0');
+            const s = secs.toString().padStart(2, '0');
+
+            return `${days}d ${h}:${m}:${s}`;
+        }
+
+        async function loadDevices() {
+            const search = document.getElementById('searchInput').value;
+            const status = document.getElementById('statusFilter').value;
+            let url = '/api/devices?limit=50';
+            if (search) url += '&search=' + encodeURIComponent(search);
+            if (status) url += '&status=' + status;
+
+            const res = await fetch(url);
+            const data = await res.json();
+            renderDevices(data.devices || []);
+        }
+
+        function renderDevices(devices) {
+            const grid = document.getElementById('deviceGrid');
+            if (!devices.length) {
+                grid.innerHTML = '<div class="empty-state"><i class="fas fa-router"></i><p>No devices found</p></div>';
+                return;
+            }
+            grid.innerHTML = devices.map(d => {
+                const rxPower = d.rxPower || 0;
+                const rxClass = rxPower === 0 ? 'unknown' : rxPower > -20 ? 'excellent' : rxPower > -25 ? 'good' : 'weak';
+                const clientCount = d.clientCount || 0;
+                // Use PPPoE username if available, otherwise use template
+                const pppoeUser = d.pppoeUsername || d.template || 'No Template';
+                return `
+                <div class="device-card" onclick="location='/device/${d.id}'">
+                    <div class="device-header">
+                        <span class="status-badge ${d.status}">${d.status}</span>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                            <span class="client-badge"><i class="fas fa-wifi"></i> ${clientCount} clients</span>
+                            <span style="font-size:0.7rem; color:var(--gray); margin-top:2px;">Up: ${formatUptime(d.uptime)}</span>
+                        </div>
+                    </div>
+                    <h3>${d.manufacturer || 'Unknown'} ${d.modelName || ''}</h3>
+                    <p class="serial">${d.serialNumber}</p>
+                    <p class="template">${pppoeUser}</p>
+                    <p class="ip">${d.ipAddress || 'N/A'}</p>
+                    <div class="rx-power ${rxClass}">
+                        <i class="fas fa-signal"></i> RX: ${rxPower.toFixed(2)} dBm
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function showAddModal() { document.getElementById('addModal').classList.add('active'); }
+        function closeModal() { document.getElementById('addModal').classList.remove('active'); }
+
+        document.getElementById('addForm').onsubmit = async (e) => {
+            e.preventDefault();
+            await fetch('/api/devices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    serialNumber: document.getElementById('serialNumber').value,
+                    manufacturer: document.getElementById('manufacturer').value,
+                    modelName: document.getElementById('modelName').value
+                })
+            });
+            closeModal();
+            loadDevices();
+        };
+
+        if (!localStorage.getItem('token')) location = '/';
+        loadDevices();
+    </script>
+</body>
+
+</html>

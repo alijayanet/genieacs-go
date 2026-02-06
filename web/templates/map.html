@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Map - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .map-container {
+            display: flex;
+            height: calc(100vh - 100px);
+            gap: 1rem;
+        }
+
+        #map {
+            flex: 1;
+            border-radius: 16px;
+            z-index: 1;
+        }
+
+        .map-sidebar {
+            width: 320px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .map-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .map-stat {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .map-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .map-stat-label {
+            font-size: 0.7rem;
+            color: var(--gray);
+            text-transform: uppercase;
+        }
+
+        .map-stat.online .map-stat-value {
+            color: var(--success);
+        }
+
+        .map-stat.offline .map-stat-value {
+            color: var(--danger);
+        }
+
+        .device-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .device-list-item {
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .device-list-item:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .device-list-item.online::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .device-list-item.offline::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .device-list-name {
+            font-weight: 500;
+        }
+
+        .device-list-serial {
+            font-size: 0.75rem;
+            color: var(--gray);
+            font-family: monospace;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: var(--dark);
+            color: var(--light);
+            border-radius: 12px;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--dark);
+        }
+
+        .popup-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .popup-info {
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+
+        .popup-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .popup-status.online {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .popup-status.offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--light);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--light);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--card-bg);
+        }
+        
+        /* Bottom Navigation for Mobile */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--dark);
+            border-top: 1px solid var(--border);
+            z-index: 100;
+            padding: 10px 0;
+        }
+        
+        .bottom-nav.show {
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .bottom-nav a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 5px 10px;
+            transition: color 0.3s;
+        }
+        
+        .bottom-nav a i {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+        
+        .bottom-nav a:hover {
+            color: var(--light);
+        }
+        
+        .bottom-nav a.active {
+            color: var(--primary);
+        }
+        
+        /* Mobile improvements for map */
+        @media (max-width: 768px) {
+            .map-container {
+                flex-direction: column;
+                height: calc(100vh - 180px); /* Adjusted for mobile header and bottom nav */
+            }
+            
+            .map-sidebar {
+                width: 100%;
+                max-height: 200px;
+            }
+            
+            #map {
+                height: 100%;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .header-actions {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+            }
+        }
+    </style>
+    <!-- Sidebar loaded via sidebar.js -->
+    <script src="/static/js/sidebar.js"></script>
+</head>
+
+<body>
+    <!-- Sidebar will be injected automatically by sidebar.js -->
+    <main class="main-content">
+        <div class="header">
+            <h1><i class="fas fa-map-marked-alt"></i>Network Map</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="showAddLocationModal()">
+                    <i class="fas fa-map-pin"></i> Add Location
+                </button>
+                <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="map-sidebar">
+                <div class="map-stats">
+                    <div class="map-stat online">
+                        <div class="map-stat-value" id="onlineCount">0</div>
+                        <div class="map-stat-label">Online</div>
+                    </div>
+                    <div class="map-stat offline">
+                        <div class="map-stat-value" id="offlineCount">0</div>
+                        <div class="map-stat-label">Offline</div>
+                    </div>
+                </div>
+                <div class="filter-buttons"><button class="filter-btn active"
+                        onclick="filterDevices('all')">All</button><button class="filter-btn"
+                        onclick="filterDevices('online')">Online</button><button class="filter-btn"
+                        onclick="filterDevices('offline')">Offline</button></div><input type="text" class="search-input"
+                    placeholder="Search devices..." oninput="searchDevices(this.value)"
+                    style="width:100%;padding:10px;margin-bottom:1rem;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;color:var(--light);">
+                <h3 style="font-size:0.9rem;margin-bottom:0.75rem;color:var(--gray);">Devices</h3>
+                <div class="device-list" id="deviceList"></div>
+            </div>
+        </div>
+    </main>
+    <!-- Add Location Modal -->
+    <div class="modal-overlay" id="addLocationModal">
+        <div class="modal">
+            <h2><i class="fas fa-map-pin"></i>Set Device Location</h2>
+            <form id="locationForm">
+                <div class="form-group"><label>Device</label><select id="deviceSelect" required
+                        style="width:100%;padding:12px;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;color:var(--light);"></select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Latitude</label><input type="number" id="latitude" step="any"
+                            required placeholder="-6.1234"></div>
+                    <div class="form-group"><label>Longitude</label><input type="number" id="longitude" step="any"
+                            required placeholder="106.1234"></div>
+                </div>
+                <div class="form-group"><label>Address</label><input type="text" id="address"
+                        placeholder="Customer address"></div>
+                <!-- Mini Map for Coordinate Selection -->
+                <div class="form-group"><label>Select Location on Map</label>
+                    <div id="modalMap" style="height:300px;border-radius:10px;border:1px solid var(--border);"></div>
+                    <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem;"><i
+                            class="fas fa-info-circle"></i>Click on the map to set exact coordinates </p>
+                </div>
+                <div class="modal-actions"><button type="button" class="btn btn-secondary"
+                        onclick="closeModal()">Cancel</button><button type="submit" class="btn btn-primary"><i
+                            class="fas fa-save"></i>Save Location</button></div>
+            </form>
+        </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>let map,
+            modalMap,
+            markers = [],
+            customers = [],
+            currentFilter = 'all',
+            modalMarker = null;
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([-6.2, 106.8], 11); // Default: Jakarta
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            // Click to get coordinates
+            map.on('click', function (e) {
+                document.getElementById('latitude').value = e.latlng.lat.toFixed(6);
+                document.getElementById('longitude').value = e.latlng.lng.toFixed(6);
+            });
+
+            loadLocations();
+        }
+
+        async function loadLocations() {
+            try {
+                // Load customer locations for the map markers
+                const res = await fetch('/api/locations');
+                const result = await res.json();
+                customers = result.data || [];
+                updateStats();
+                renderCustomerList();
+                renderMarkers();
+            }
+
+            catch (err) {
+                console.error('Failed to load locations:', err);
+            }
+        }
+
+        // Function to load all devices for the dropdown
+        async function loadDevicesForDropdown() {
+            try {
+                const res = await fetch('/api/devices?limit=1000');
+                const result = await res.json();
+                const devices = result.devices || [];
+                
+                const select = document.getElementById('deviceSelect');
+                select.innerHTML = devices.map(d => `<option value="${d.id}" >${d.serialNumber} - ${d.manufacturer || 'Unknown'}</option>`).join('');
+            }
+            catch (err) {
+                console.error('Failed to load devices for dropdown:', err);
+            }
+        }
+
+        function updateStats() {
+            const online = customers.filter(c => c.deviceStatus === 'online').length;
+            const offline = customers.filter(c => c.deviceStatus === 'offline').length; // Includes null as offline
+            document.getElementById('onlineCount').textContent = online;
+            document.getElementById('offlineCount').textContent = offline;
+        }
+
+        function renderMarkers() {
+            // Clear existing markers
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            const filtered = customers.filter(c => {
+                if (currentFilter === 'all') return true;
+                return c.deviceStatus === currentFilter;
+            }).filter(c => c.latitude !== 0 && c.longitude !== 0);
+
+            filtered.forEach(cust => {
+                const isOnline = cust.deviceStatus === 'online';
+
+                // Create custom icon
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background:${isOnline ? '#10b981' : '#f43f5e'};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);" ></div>`,
+                    iconSize: [14, 14],
+                    iconAnchor: [7, 7]
+                });
+
+                const marker = L.marker([cust.latitude, cust.longitude], {
+                    icon
+
+                }).addTo(map).bindPopup(` <div class="popup-title" >$ {
+                    cust.name
+                }
+
+                </div> <div class="popup-info" ><b>Status:</b> $ {
+                    cust.status.toUpperCase()
+                }
+
+                </div> <div class="popup-info" ><b>Device:</b> $ {
+                    cust.deviceStatus.toUpperCase()
+                }
+
+                </div> <div class="popup-info" ><b>Address:</b> $ {
+                    cust.address || 'N/A'
+                }
+
+                </div> <br> <a href="/customers" style="color:var(--primary);text-decoration:none;" >Manage Customer →</a> `);
+
+                markers.push(marker);
+            });
+
+            // Fit bounds if markers exist
+            if (markers.length > 0) {
+                const group = L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        function renderCustomerList() {
+            const list = document.getElementById('deviceList');
+
+            const filtered = customers.filter(c => {
+                if (currentFilter === 'all') return true;
+                return c.deviceStatus === currentFilter;
+            });
+
+            list.innerHTML = filtered.map(c => ` <div class="device-list-item ${c.deviceStatus}" onclick="focusCustomer(${c.id})" > <div class="device-list-name" >$ {
+                    c.name
+                }
+
+                </div> <div class="device-list-serial" >$ {
+                    c.address || 'No Address'
+                }
+
+                </div> <div style="font-size:0.7rem; color:${c.deviceStatus === 'online' ? '#10b981' : '#f43f5e'}" >$ {
+                    c.deviceStatus.toUpperCase()
+                }
+
+                </div> </div> `).join('') || '<p style="color:var(--gray);text-align:center;">No customers found</p>';
+        }
+
+        function filterDevices(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderCustomerList();
+            renderMarkers();
+        }
+
+        function searchDevices(query) {
+            const list = document.getElementById('deviceList');
+
+            const filtered = customers.filter(c => {
+                const match = c.name.toLowerCase().includes(query.toLowerCase()) || (c.address || '').toLowerCase().includes(query.toLowerCase());
+                if (currentFilter === 'all') return match;
+                return match && c.deviceStatus === currentFilter;
+            });
+
+            list.innerHTML = filtered.map(c => ` <div class="device-list-item ${c.deviceStatus}" onclick="focusCustomer(${c.id})" > <div class="device-list-name" >$ {
+                    c.name
+                }
+
+                </div> <div class="device-list-serial" >$ {
+                    c.address || 'No Address'
+                }
+
+                </div> </div> `).join('') || '<p style="color:var(--gray);text-align:center;">No customers found</p>';
+        }
+
+        function focusCustomer(id) {
+            const cust = customers.find(c => c.id === id);
+
+            if (cust && cust.latitude !== 0 && cust.longitude !== 0) {
+                map.setView([cust.latitude, cust.longitude], 16);
+
+                markers.forEach(m => {
+                    const latLng = m.getLatLng();
+
+                    if (latLng.lat === cust.latitude && latLng.lng === cust.longitude) {
+                        m.openPopup();
+                    }
+                });
+            }
+
+            else {
+                alert('Customer location not set. Click "Add Location" to set coordinates.');
+            }
+        }
+
+        function showAddLocationModal() {
+            // Load all devices for the dropdown
+            loadDevicesForDropdown();
+
+            // Show modal
+            document.getElementById('addLocationModal').classList.add('active');
+
+            // Initialize modal map
+            setTimeout(() => {
+                if (!modalMap) {
+                    modalMap = L.map('modalMap').setView([-6.2, 106.8], 11);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap'
+                    }).addTo(modalMap);
+
+                    // Click to set coordinates
+                    modalMap.on('click', function (e) {
+                        document.getElementById('latitude').value = e.latlng.lat.toFixed(6);
+                        document.getElementById('longitude').value = e.latlng.lng.toFixed(6);
+
+                        // Update marker on modal map
+                        if (modalMarker) {
+                            modalMap.removeLayer(modalMarker);
+                        }
+
+                        modalMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(modalMap);
+                    });
+                }
+
+                else {
+                    modalMap.invalidateSize(); // Fix map render issues
+                }
+            }
+
+                , 100);
+        }
+
+        function closeModal() {
+            document.getElementById('addLocationModal').classList.remove('active');
+
+            // Clear marker
+            if (modalMarker) {
+                modalMap.removeLayer(modalMarker);
+                modalMarker = null;
+            }
+        }
+
+        document.getElementById('locationForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('deviceSelect').value;
+
+            const data = {
+                latitude: parseFloat(document.getElementById('latitude').value),
+                longitude: parseFloat(document.getElementById('longitude').value),
+                address: document.getElementById('address').value
+            }
+
+                ;
+
+            try {
+
+                // Use new endpoint for updating customer location
+                await fetch(`/api/customers/$ {
+                        id
+                    }
+
+                    /location`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+
+                    ,
+                    body: JSON.stringify(data)
+                });
+                closeModal();
+                loadLocations();
+            }
+
+            catch (err) {
+                alert('Failed to update location');
+                console.error(err);
+            }
+        }
+
+            ;
+
+        if (!localStorage.getItem('token')) location = '/';
+        
+        // Theme functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('theme-toggle');
+            const icon = themeToggle.querySelector('i');
+            
+            if (body.classList.contains('light-theme')) {
+                body.classList.remove('light-theme');
+                localStorage.setItem('theme', 'dark');
+                icon.className = 'fas fa-moon';
+            } else {
+                body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+                icon.className = 'fas fa-sun';
+            }
+        }
+        
+        // Initialize theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const body = document.body;
+            const themeToggle = document.getElementById('theme-toggle');
+            const icon = themeToggle.querySelector('i');
+            
+            if (savedTheme === 'light') {
+                body.classList.add('light-theme');
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
+        }
+        
+        // Show bottom navigation on mobile
+        function initBottomNav() {
+            const mediaQuery = window.matchMedia('(max-width: 768px)');
+            
+            function handleMediaChange(e) {
+                if (e.matches) {
+                    document.querySelector('.bottom-nav').classList.add('show');
+                } else {
+                    document.querySelector('.bottom-nav').classList.remove('show');
+                }
+            }
+            
+            handleMediaChange(mediaQuery);
+            mediaQuery.addListener(handleMediaChange);
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            initBottomNav();
+        });
+        
+        initMap();
+    </script>
+    
+    <!-- Bottom Navigation for Mobile -->
+    <nav class="bottom-nav">
+        <a href="/dashboard">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="/devices">
+            <i class="fas fa-router"></i>
+            <span>Devices</span>
+        </a>
+        <a href="/map" class="active">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Map</span>
+        </a>
+        <a href="#" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+            <span>Theme</span>
+        </a>
+    </nav>
+</body>
+
+</html>

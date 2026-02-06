@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Details - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .tabs {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            color: var(--gray);
+            font-weight: 500;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .tab:hover {
+            color: var(--light);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-card {
+            background: var(--dark-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-card h3 {
+            margin-bottom: 1.25rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 10px;
+        }
+
+        .info-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+        }
+
+        .info-row span:first-child {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .info-row span:last-child {
+            font-weight: 500;
+            color: var(--light);
+        }
+
+        .status-online {
+            color: #10b981;
+        }
+
+        .status-offline {
+            color: #ef4444;
+        }
+
+        .vendor-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--primary);
+            color: white;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .wan-table,
+        .wlan-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .wan-table th,
+        .wlan-table th {
+            text-align: left;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--gray);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .wan-table td,
+        .wlan-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+
+        .val-enabled {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .val-disabled {
+            color: #ef4444;
+        }
+    </style>
+    <!-- Sidebar loaded via sidebar.js -->
+    <script src="/static/js/sidebar.js"></script>
+</head>
+
+<body>
+    <!-- Sidebar will be injected automatically by sidebar.js -->
+
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <a href="/devices" class="back-link"><i class="fas fa-arrow-left"></i> Back to Devices</a>
+                <h1 id="deviceTitle">Device Details</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="refreshDevice()"><i class="fas fa-sync"></i> Summon</button>
+                <button class="btn btn-warning" onclick="rebootDevice()"><i class="fas fa-power-off"></i>
+                    Reboot</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('summary', this)">Summary</button>
+            <button class="tab" onclick="showTab('wan', this)">WAN</button>
+            <button class="tab" onclick="showTab('lan', this)">LAN</button>
+            <button class="tab" onclick="showTab('wlan', this)">WLAN</button>
+            <button class="tab" onclick="showTab('port-forwarding', this)">Port Forwarding</button>
+            <button class="tab" onclick="showTab('qos', this)">QoS</button>
+            <button class="tab" onclick="showTab('user', this)">USER</button>
+            <button class="tab" onclick="showTab('tr069', this)">TR-069</button>
+            <button class="tab" onclick="showTab('params', this)">All Parameters</button>
+            <button class="tab" onclick="showTab('logs', this)">History</button>
+        </div>
+
+        <!-- Summary Tab -->
+        <div id="summary" class="tab-content active">
+            <div class="card-grid">
+                <div class="info-card">
+                    <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
+                    <div class="info-rows" id="summaryInfo"></div>
+                </div>
+                <div class="info-card">
+                    <h3><i class="fas fa-signal"></i> Optical Info (PON)</h3>
+                    <div class="info-rows" id="ponInfo"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WAN Tab -->
+        <div id="wan" class="tab-content">
+            <div id="wanContainer"></div>
+        </div>
+
+        <!-- LAN Tab -->
+        <div id="lan" class="tab-content">
+            <!-- LAN Configuration -->
+            <div class="info-card" style="margin-bottom: 1rem;">
+                <h3><i class="fas fa-edit"></i> LAN Configuration</h3>
+                <div style="display: grid; gap: 1rem; margin-top: 1rem;">
+                    <!-- IP Configuration -->
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">IP Address:</label>
+                        <input type="text" id="lanIP" placeholder="192.168.1.1"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">Subnet Mask:</label>
+                        <input type="text" id="lanSubnet" placeholder="255.255.255.0"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">DHCP Enable:</label>
+                        <select id="dhcpEnable" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                    </div>
+                    
+                    <!-- VLAN Configuration -->
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">VLAN ID:</label>
+                        <input type="number" id="vlanId" placeholder="100"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">VLAN Priority:</label>
+                        <input type="number" id="vlanPriority" placeholder="0"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                    </div>
+                    
+                    <!-- Bridge Mode & Port Isolation -->
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">Bridge Mode:</label>
+                        <select id="bridgeMode" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                            <option value="false">Disabled</option>
+                            <option value="true">Enabled</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">Port Isolation:</label>
+                        <select id="portIsolation" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                            <option value="false">Disabled</option>
+                            <option value="true">Enabled</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">Max Clients:</label>
+                        <input type="number" id="maxClients" placeholder="32"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="saveLANConfig()" style="margin-top: 1rem;">
+                        <i class="fas fa-save"></i> Save LAN Configuration
+                    </button>
+                </div>
+                <p style="color: var(--gray); font-size: 0.8rem; margin-top: 10px;"><i class="fas fa-info-circle"></i>
+                    Changes will be queued and applied when the device connects next.</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="info-card">
+                    <h3><i class="fas fa-network-wired"></i> LAN Status</h3>
+                    <div class="info-rows" id="lanInfo"></div>
+                </div>
+                <div class="info-card">
+                    <h3><i class="fas fa-laptop"></i> Connected Hosts</h3>
+                    <div id="lanHosts"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Port Forwarding Tab -->
+        <div id="port-forwarding" class="tab-content">
+            <div class="info-card" style="margin-bottom: 1rem;">
+                <h3><i class="fas fa-plus"></i> Add Port Forwarding Rule</h3>
+                <div style="display: grid; gap: 1rem; margin-top: 1rem;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">External Port:</label>
+                        <input type="number" id="pfExternalPort" placeholder="8080"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">Internal Port:</label>
+                        <input type="number" id="pfInternalPort" placeholder="80"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">Internal Client:</label>
+                        <input type="text" id="pfInternalClient" placeholder="192.168.1.100"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">Protocol:</label>
+                        <select id="pfProtocol" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                            <option value="TCP">TCP</option>
+                            <option value="UDP">UDP</option>
+                            <option value="BOTH">TCP & UDP</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 120px; color: var(--gray);">Description:</label>
+                        <input type="text" id="pfDescription" placeholder="Web Server"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                    </div>
+                    <button class="btn btn-primary" onclick="addPortForwardingRule()" style="margin-top: 1rem;">
+                        <i class="fas fa-plus"></i> Add Rule
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3><i class="fas fa-list"></i> Port Forwarding Rules</h3>
+                <div id="portForwardingList"></div>
+            </div>
+        </div>
+
+        <!-- QoS Tab -->
+        <div id="qos" class="tab-content">
+            <div class="info-card" style="margin-bottom: 1rem;">
+                <h3><i class="fas fa-tachometer-alt"></i> QoS Configuration</h3>
+                <div style="display: grid; gap: 1rem; margin-top: 1rem;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 150px; color: var(--gray);">Enable QoS:</label>
+                        <select id="qosEnable" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 150px; color: var(--gray);">Max Bandwidth (Kbps):</label>
+                        <input type="number" id="qosMaxBandwidth" placeholder="100000"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 150px; color: var(--gray);">Priority:</label>
+                        <select id="qosPriority" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveQoSConfig()" style="margin-top: 1rem;">
+                        <i class="fas fa-save"></i> Save QoS Configuration
+                    </button>
+                </div>
+                <p style="color: var(--gray); font-size: 0.8rem; margin-top: 10px;"><i class="fas fa-info-circle"></i>
+                    Changes will be queued and applied when the device connects next.</p>
+            </div>
+        </div>
+
+        <!-- WLAN Tab -->
+        <div id="wlan" class="tab-content">
+            <!-- WiFi Configuration Form -->
+            <div class="info-card" style="margin-bottom: 1rem;">
+                <h3><i class="fas fa-edit"></i> Edit WiFi Configuration</h3>
+                <div style="display: grid; gap: 1rem; margin-top: 1rem;">
+                    <!-- SSID Edit -->
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 100px; color: var(--gray);">SSID:</label>
+                        <input type="text" id="editSSID" placeholder="Enter new SSID"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                        <button class="btn btn-primary" onclick="saveSSID()" style="white-space: nowrap;"><i
+                                class="fas fa-save"></i> Save SSID</button>
+                    </div>
+                    <!-- Password Edit -->
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="min-width: 100px; color: var(--gray);">Password:</label>
+                        <input type="text" id="editPassword" placeholder="Enter new password"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--light);">
+                        <button class="btn btn-primary" onclick="savePassword()" style="white-space: nowrap;"><i
+                                class="fas fa-save"></i> Save Password</button>
+                    </div>
+                </div>
+                <p style="color: var(--gray); font-size: 0.8rem; margin-top: 10px;"><i class="fas fa-info-circle"></i>
+                    Changes will be queued and applied when the device connects next.</p>
+            </div>
+
+            <!-- Current WiFi Status -->
+            <div id="wlanContainer"></div>
+        </div>
+
+        <!-- USER Tab -->
+        <div id="user" class="tab-content">
+            <div class="info-card">
+                <h3><i class="fas fa-user-shield"></i> Management Accounts</h3>
+                <div class="info-rows" id="userInfo"></div>
+            </div>
+        </div>
+
+        <!-- TR069 Tab -->
+        <div id="tr069" class="tab-content">
+            <div class="info-card">
+                <h3><i class="fas fa-server"></i> CWMP Settings</h3>
+                <div class="info-rows" id="tr069Info"></div>
+            </div>
+        </div>
+
+        <!-- Params Tab -->
+        <div id="params" class="tab-content">
+            <div class="info-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3><i class="fas fa-list"></i> Full Parameter List</h3>
+                    <input type="text" id="paramSearch" placeholder="Search parameters..." onkeyup="filterParams()"
+                        style="padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; width: 300px;">
+                </div>
+                <div id="paramsList" class="params-list"></div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="logs" class="tab-content">
+            <div class="info-card">
+                <h3><i class="fas fa-history"></i> Log History</h3>
+                <div id="logsList"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let device = null;
+        const deviceId = window.location.pathname.split('/').pop();
+
+        function showTab(tabId, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            if (el) {
+                el.classList.add('active');
+            } else {
+                // Find tab button by onclick
+                const tabs = document.querySelectorAll('.tab');
+                for (let t of tabs) {
+                    if (t.getAttribute('onclick')?.includes(tabId)) {
+                        t.classList.add('active');
+                        break;
+                    }
+                }
+            }
+
+            const content = document.getElementById(tabId);
+            if (content) content.classList.add('active');
+
+            // Re-load data for specific tabs if needed
+            if (tabId === 'wan') loadWan();
+            if (tabId === 'wlan') loadWlan();
+            if (tabId === 'lan') loadLan();
+            if (tabId === 'user') loadUser();
+            if (tabId === 'tr069') loadTR069();
+            if (tabId === 'params') loadAllParams();
+        }
+
+        async function fetchDevice() {
+            try {
+                const res = await fetch(`/api/devices/${deviceId}`);
+                if (!res.ok) throw new Error('Failed to fetch device');
+                device = await res.json();
+                renderSummary();
+                loadPon();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('summaryInfo').innerHTML = `<div class="error">Error loading device data: ${err.message}</div>`;
+            }
+        }
+
+        async function refreshDevice() {
+            const res = await fetch(`/api/devices/${deviceId}/refresh`, { method: 'POST' });
+            if (res.ok) {
+                alert('Refresh command queued successfully');
+                location.reload();
+            }
+        }
+
+        async function rebootDevice() {
+            if (!confirm('Are you sure you want to reboot this device?')) return;
+            const res = await fetch(`/api/devices/${deviceId}/reboot`, { method: 'POST' });
+            if (res.ok) alert('Reboot command queued');
+        }
+
+        async function factoryResetDevice() {
+            if (!confirm('WARNING: Factory reset will erase all settings. Continue?')) return;
+            const res = await fetch(`/api/devices/${deviceId}/factory-reset`, { method: 'POST' });
+            if (res.ok) alert('Factory reset command queued');
+        }
+
+        let allParams = [];
+        async function loadAllParams() {
+            const list = document.getElementById('paramsList');
+            list.innerHTML = '<div class="loading">Loading parameters...</div>';
+
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/parameters`);
+                allParams = await res.json();
+                renderParams(allParams);
+            } catch (err) {
+                list.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+            }
+        }
+
+        function renderParams(params) {
+            const list = document.getElementById('paramsList');
+            if (params.length === 0) {
+                list.innerHTML = '<div class="empty-state">No parameters found</div>';
+                return;
+            }
+            list.innerHTML = params.map(p => `
+                <div class="info-row param-row" style="justify-content: flex-start; gap: 20px;">
+                    <code style="color:var(--primary); font-size:0.8rem; min-width: 300px; word-break: break-all;">${p.path}</code>
+                    <span style="color:var(--light); font-weight:bold;">${p.value}</span>
+                </div>
+            `).join('');
+        }
+
+        function filterParams() {
+            const query = document.getElementById('paramSearch').value.toLowerCase();
+            const filtered = allParams.filter(p =>
+                p.path.toLowerCase().includes(query) ||
+                p.value.toLowerCase().includes(query)
+            );
+            renderParams(filtered);
+        }
+
+        async function loadLan() {
+            const res = await fetch(`/api/devices/${deviceId}/clients`);
+            const data = await res.json();
+            const hosts = document.getElementById('lanHosts');
+
+            if (data.clients && data.clients.length > 0) {
+                hosts.innerHTML = data.clients.map(c => `
+                    <div class="info-row">
+                        <span>${c.name} (${c.ip})</span>
+                        <span>${c.mac}</span>
+                    </div>
+                `).join('');
+            } else {
+                hosts.innerHTML = '<div class="empty-state">No connected hosts detected</div>';
+            }
+        }
+
+        function renderSummary() {
+            document.getElementById('deviceTitle').textContent = `${device.manufacturer} ${device.modelName || ''}`;
+            const info = document.getElementById('summaryInfo');
+            info.innerHTML = `
+                <div class="info-row"><span>Status</span><span class="status-${device.status}">${device.status.toUpperCase()}</span></div>
+                <div class="info-row"><span>Serial Number</span><span>${device.serialNumber}</span></div>
+                <div class="info-row"><span>Product Class</span><span>${device.productClass || 'N/A'}</span></div>
+                <div class="info-row"><span>OUI</span><span>${device.oui || 'N/A'}</span></div>
+                <div class="info-row"><span>Manufacturer</span><span>${device.manufacturer || 'N/A'}</span></div>
+                <div class="info-row"><span>Hardware Version</span><span>${device.hardwareVersion || 'N/A'}</span></div>
+                <div class="info-row"><span>Software Version</span><span>${device.softwareVersion || 'N/A'}</span></div>
+                <div class="info-row"><span>PPPoE User</span><span style="color:var(--primary);">${device.template || 'N/A'}</span></div>
+                <div class="info-row"><span>WAN IP</span><span>${device.ipAddress || 'N/A'}</span></div>
+                <div class="info-row"><span>Uptime</span><span>${formatUptime(device.uptime)}</span></div>
+            `;
+        }
+
+        async function loadPon() {
+            const res = await fetch(`/api/devices/${deviceId}/pon`);
+            const pon = await res.json();
+            const info = document.getElementById('ponInfo');
+            info.innerHTML = `
+                <div class="info-row"><span>PON Mode</span><span class="vendor-badge">${pon.ponMode || 'N/A'}</span></div>
+                <div class="info-row"><span>RX Power</span><span style="color:${pon.rxPower > -25 ? '#10b981' : '#ef4444'}">${pon.rxPower ? pon.rxPower.toFixed(2) : '--'} dBm</span></div>
+                <div class="info-row"><span>TX Power</span><span>${pon.txPower ? pon.txPower.toFixed(2) : '--'} dBm</span></div>
+                <div class="info-row"><span>Temperature</span><span>${pon.temperature ? pon.temperature.toFixed(1) : '--'} °C</span></div>
+                <div class="info-row"><span>Voltage</span><span>${pon.voltage ? pon.voltage.toFixed(2) : '--'} V</span></div>
+                <div class="info-row"><span>Bias Current</span><span>${pon.biasCurrent ? pon.biasCurrent.toFixed(1) : '--'} mA</span></div>
+            `;
+        }
+
+        // --- WAN TAB (Enhanced with comprehensive PPP data) ---
+        async function loadWan() {
+            const container = document.getElementById('wanContainer');
+
+            if (!device || !device.manufacturer) {
+                container.innerHTML = '<div class="empty-state">Device data not loaded yet</div>';
+                return;
+            }
+
+            try {
+                // Use the new dedicated endpoint for WAN information
+                const res = await fetch(`/api/devices/${deviceId}/wan-details`);
+                const wanInfo = await res.json();
+
+                if (!wanInfo) {
+                    container.innerHTML = '<div class="empty-state">No WAN data found. Click "Summon" to fetch data from device.</div>';
+                    return;
+                }
+
+                // Helper function for status color
+                const getStatusColor = (status) => {
+                    if (!status) return 'var(--gray)';
+                    const s = status.toUpperCase();
+                    if (s === 'CONNECTED' || s === 'UP') return '#10b981';
+                    if (s === 'CONNECTING' || s === 'AUTHENTICATING') return '#f59e0b';
+                    return '#ef4444';
+                };
+
+                const getStatusBadge = (status) => {
+                    const color = getStatusColor(status);
+                    return `<span style="background: ${color}20; color: ${color}; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 0.85rem;">${status || 'N/A'}</span>`;
+                };
+
+                // Create a structured display for PPPoE and WAN information
+                let html = `
+                    <div class="info-card" style="margin-bottom:1rem;">
+                        <h3><i class="fas fa-user"></i> PPPoE Connection</h3>
+                        <div class="info-rows">
+                            <div class="info-row"><span>Status</span>${getStatusBadge(wanInfo.pppoeStatus)}</div>
+                            <div class="info-row"><span>Username</span><span style="color:var(--primary); font-weight: 600;">${wanInfo.pppoeUsername || 'N/A'}</span></div>
+                            <div class="info-row"><span>IP Address</span><span style="font-family: monospace;">${wanInfo.pppoeIP || 'N/A'}</span></div>
+                            <div class="info-row"><span>MAC Address</span><span style="font-family: monospace;">${wanInfo.pppoeMAC || 'N/A'}</span></div>
+                            <div class="info-row"><span>Uptime</span><span>${wanInfo.pppoeUptime || 'N/A'}</span></div>
+                            <div class="info-row"><span>VLAN ID</span><span>${wanInfo.pppoeVLAN || 'N/A'}</span></div>
+                            <div class="info-row"><span>Service Name</span><span>${wanInfo.pppoeServiceName || 'N/A'}</span></div>
+                            ${wanInfo.pppoeLastError ? `<div class="info-row"><span>Last Error</span><span style="color:#ef4444;">${wanInfo.pppoeLastError}</span></div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="info-card" style="margin-bottom:1rem;">
+                        <h3><i class="fas fa-network-wired"></i> Network Configuration</h3>
+                        <div class="info-rows">
+                            <div class="info-row"><span>Connection Type</span><span>${wanInfo.pppoeConnType || wanInfo.wanConnectionType || 'N/A'}</span></div>
+                            <div class="info-row"><span>Gateway</span><span style="font-family: monospace;">${wanInfo.pppoeGateway || wanInfo.wanGateway || 'N/A'}</span></div>
+                            <div class="info-row"><span>DNS Servers</span><span style="font-family: monospace;">${wanInfo.pppoeDNS || (wanInfo.wanDNS1 ? wanInfo.wanDNS1 + (wanInfo.wanDNS2 ? ', ' + wanInfo.wanDNS2 : '') : 'N/A')}</span></div>
+                            <div class="info-row"><span>NAT</span><span>${wanInfo.pppoeNAT || 'N/A'}</span></div>
+                            <div class="info-row"><span>MTU</span><span>${wanInfo.pppoeMTU || 'N/A'}</span></div>
+                            ${wanInfo.pppoeLanBind ? `<div class="info-row"><span>LAN Binding</span><span style="color: var(--primary);">${wanInfo.pppoeLanBind}</span></div>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Display all detected WAN connections
+                if (wanInfo.allConnections && wanInfo.allConnections.length > 0) {
+                    html += `
+                        <div class="info-card" style="margin-bottom:1rem;">
+                            <h3><i class="fas fa-plug"></i> All WAN Connections (${wanInfo.allConnections.length})</h3>
+                    `;
+
+                    wanInfo.allConnections.forEach((conn, idx) => {
+                        html += `
+                            <div style="background: rgba(255,255,255,0.02); border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; border-left: 3px solid ${conn.status === 'Connected' ? '#10b981' : '#ef4444'};">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <span style="font-weight: 600; color: var(--primary);">${conn.name || conn.type || 'Connection ' + (idx + 1)}</span>
+                                    ${getStatusBadge(conn.status)}
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem; font-size: 0.85rem;">
+                                    ${conn.username ? `<div><span style="color: var(--gray);">User:</span> <span style="color: var(--primary);">${conn.username}</span></div>` : ''}
+                                    ${conn.ip ? `<div><span style="color: var(--gray);">IP:</span> <span style="font-family: monospace;">${conn.ip}</span></div>` : ''}
+                                    ${conn.vlan ? `<div><span style="color: var(--gray);">VLAN:</span> ${conn.vlan}</div>` : ''}
+                                    ${conn.uptime ? `<div><span style="color: var(--gray);">Uptime:</span> ${conn.uptime}</div>` : ''}
+                                    ${conn.connectionType ? `<div><span style="color: var(--gray);">Type:</span> ${conn.connectionType}</div>` : ''}
+                                    ${conn.nat ? `<div><span style="color: var(--gray);">NAT:</span> ${conn.nat}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                }
+
+                // Add all WAN-related parameters in a collapsible section
+                if (wanInfo.parameters && Object.keys(wanInfo.parameters).length > 0) {
+                    const paramCount = Object.keys(wanInfo.parameters).length;
+                    html += `
+                        <div class="info-card">
+                            <h3 style="cursor: pointer;" onclick="toggleWanParams()">
+                                <i class="fas fa-chevron-right" id="wanParamsIcon"></i> Raw WAN Parameters (${paramCount})
+                            </h3>
+                            <div id="wanParamsContent" style="display: none;">
+                                <div class="info-rows" style="max-height: 400px; overflow-y: auto;">
+                    `;
+
+                    // Sort parameters by path
+                    const sortedParams = Object.entries(wanInfo.parameters).sort((a, b) => a[0].localeCompare(b[0]));
+                    for (const [path, value] of sortedParams) {
+                        html += `<div class="info-row"><span style="font-size: 0.8rem; word-break: break-all;">${path}</span><span style="max-width: 200px; word-break: break-all;">${value}</span></div>`;
+                    }
+
+                    html += `</div></div></div>`;
+                }
+
+                container.innerHTML = html;
+            } catch (err) {
+                console.error('Error loading WAN:', err);
+                container.innerHTML = '<div class="empty-state">Error loading WAN data</div>';
+            }
+        }
+
+        // Toggle raw WAN parameters visibility
+        function toggleWanParams() {
+            const content = document.getElementById('wanParamsContent');
+            const icon = document.getElementById('wanParamsIcon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-down');
+            } else {
+                content.style.display = 'none';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-right');
+            }
+        }
+
+        function renderWanTable(title, params, prefix, fields) {
+            let rows = fields.map(f => {
+                const val = params.find(p => p.path === prefix + f.path)?.value || 'N/A';
+                return `<div class="info-row"><span>${f.label}</span><span>${val}</span></div>`;
+            }).join('');
+
+            return `
+                <div class="info-card" style="margin-bottom:1rem;">
+                    <h3><i class="fas fa-globe"></i> ${title}</h3>
+                    <div class="info-rows">${rows}</div>
+                </div>
+            `;
+        }
+
+        // --- WLAN TAB ---
+        async function loadWlan() {
+            const container = document.getElementById('wlanContainer');
+
+            if (!device) {
+                container.innerHTML = '<div class="empty-state">Device data not loaded yet</div>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/parameters`);
+                const params = await res.json();
+
+                if (!params || !Array.isArray(params) || params.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No parameters found. Click "Summon" to fetch data from device.</div>';
+                    return;
+                }
+
+                let html = '';
+                // Basic SSID Search - Search for all .SSID parameters
+                const ssids = params.filter(p => (p.path.includes('WLANConfiguration') || p.path.includes('WiFi.SSID.')) && p.path.endsWith('.SSID'));
+
+                ssids.forEach((s, i) => {
+                    const prefix = s.path.split('.SSID')[0] + '.';
+                    const pwd = params.find(p => p.path.startsWith(prefix) && (p.path.endsWith('KeyPassphrase') || p.path.endsWith('PreSharedKey.1.KeyPassphrase') || p.path.endsWith('Key')))?.value || '****';
+                    const enable = params.find(p => p.path === prefix + 'Enable')?.value;
+                    const channel = params.find(p => p.path === prefix + 'Channel')?.value || 'Auto';
+
+                    html += `
+                        <div class="info-card" style="margin-bottom:1rem;">
+                            <h3><i class="fas fa-wifi"></i> WiFi SSID: ${s.value}</h3>
+                            <div class="info-rows">
+                                <div class="info-row"><span>Status</span><span class="${enable == '1' || enable == 'true' ? 'val-enabled' : 'val-disabled'}">${enable == '1' || enable == 'true' ? 'ENABLED' : 'DISABLED'}</span></div>
+                                <div class="info-row"><span>Channel</span><span>${channel}</span></div>
+                                <div class="info-row"><span>Password</span><span style="color:var(--primary); font-family: monospace;">${pwd}</span></div>
+                                <div class="info-row"><span>Full Path</span><small style="color:var(--gray); font-size:0.7rem;">${prefix}</small></div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html || '<div class="empty-state">No WiFi configured. Click "Summon" to fetch data from device.</div>';
+            } catch (err) {
+                console.error('Error loading WLAN:', err);
+                container.innerHTML = '<div class="empty-state">Error loading WiFi data</div>';
+            }
+        }
+
+        // --- USER TAB (Account Management) ---
+        async function loadUser() {
+            const info = document.getElementById('userInfo');
+
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/parameters`);
+                const params = await res.json();
+
+                if (!params || !Array.isArray(params)) {
+                    info.innerHTML = '<div class="empty-state">No parameters found</div>';
+                    return;
+                }
+
+                let html = '';
+                // Search for WebUserInfo Or SuperUser
+                const accounts = params.filter(p => p.path.includes('WebUserInfo') || p.path.includes('Account.UserName') || p.path.includes('ConfigUserName'));
+
+                if (accounts.length > 0) {
+                    accounts.forEach(a => {
+                        const prefix = a.path.split('.').slice(0, -1).join('.') + '.';
+                        const pwd = params.find(p => p.path === prefix + 'Password' || p.path === prefix + 'AdminPassword' || p.path === prefix + 'UserPassword' || p.path === prefix + 'ConfigPassword')?.value || '****';
+                        html += `
+                            <div class="info-row"><span>Username (${a.path.split('.').pop()})</span><span>${a.value}</span></div>
+                            <div class="info-row"><span>Password</span><span style="color:var(--primary);">${pwd}</span></div>
+                        `;
+                    });
+                }
+
+                info.innerHTML = html || '<div class="empty-state">No credentials found</div>';
+            } catch (err) {
+                console.error('Error loading USER:', err);
+                info.innerHTML = '<div class="empty-state">Error loading user data</div>';
+            }
+        }
+
+        // --- TR069 TAB (CWMP) ---
+        async function loadTR069() {
+            const info = document.getElementById('tr069Info');
+
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/parameters`);
+                const params = await res.json();
+
+                if (!params || !Array.isArray(params)) {
+                    info.innerHTML = '<div class="empty-state">No parameters found</div>';
+                    return;
+                }
+
+                const paramsArr = params;
+                const paths = [
+                    { label: 'ACS URL', path: 'InternetGatewayDevice.ManagementServer.URL' },
+                    { label: 'Inform Enable', path: 'InternetGatewayDevice.ManagementServer.PeriodicInformEnable' },
+                    { label: 'Inform Interval', path: 'InternetGatewayDevice.ManagementServer.PeriodicInformInterval' },
+                    { label: 'Connection Request User', path: 'InternetGatewayDevice.ManagementServer.ConnectionRequestUsername' }
+                ];
+
+                let html = paths.map(f => {
+                    const val = paramsArr.find(p => p.path === f.path || p.path === 'Device.ManagementServer.' + f.label)?.value || 'N/A';
+                    return `<div class="info-row"><span>${f.label}</span><span>${val}</span></div>`;
+                }).join('');
+
+                info.innerHTML = html;
+            } catch (err) {
+                console.error('Error loading TR069:', err);
+                info.innerHTML = '<div class="empty-state">Error loading TR-069 data</div>';
+            }
+        }
+
+        function formatUptime(s) {
+            if (!s) return '0d 0h 0m';
+            const d = Math.floor(s / 86400);
+            const h = Math.floor((s % 86400) / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            return `${d}d ${h}h ${m}m`;
+        }
+
+        // Save SSID function
+        async function saveSSID() {
+            const ssid = document.getElementById('editSSID').value.trim();
+            if (!ssid) {
+                alert('Please enter a new SSID');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/wifi/ssid`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ssid: ssid })
+                });
+
+                if (res.ok) {
+                    alert('SSID change queued successfully! The device will apply this on next connection.');
+                    document.getElementById('editSSID').value = '';
+                    loadWlan(); // Refresh the list
+                } else {
+                    const err = await res.json();
+                    alert('Error: ' + (err.error || 'Failed to save SSID'));
+                }
+            } catch (err) {
+                console.error('Error saving SSID:', err);
+                alert('Error saving SSID: ' + err.message);
+            }
+        }
+
+        // Save Password function
+        async function savePassword() {
+            const password = document.getElementById('editPassword').value.trim();
+            if (!password) {
+                alert('Please enter a new password');
+                return;
+            }
+
+            if (password.length < 8) {
+                alert('Password must be at least 8 characters');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/wifi/password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: password })
+                });
+
+                if (res.ok) {
+                    alert('WiFi password change queued successfully! The device will apply this on next connection.');
+                    document.getElementById('editPassword').value = '';
+                    loadWlan(); // Refresh the list
+                } else {
+                    const err = await res.json();
+                    alert('Error: ' + (err.error || 'Failed to save password'));
+                }
+            } catch (err) {
+                console.error('Error saving password:', err);
+                alert('Error saving password: ' + err.message);
+            }
+        }
+
+        // --- LAN Configuration Functions ---
+        async function loadLANConfig() {
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/lan`);
+                const config = await res.json();
+                
+                document.getElementById('lanIP').value = config.ipAddress || '';
+                document.getElementById('lanSubnet').value = config.subnetMask || '';
+                document.getElementById('dhcpEnable').value = config.dhcpEnable ? 'true' : 'false';
+                document.getElementById('vlanId').value = config.vlanId || '';
+                document.getElementById('vlanPriority').value = config.vlanPriority || '';
+                document.getElementById('bridgeMode').value = config.bridgeMode ? 'true' : 'false';
+                document.getElementById('portIsolation').value = config.portIsolation ? 'true' : 'false';
+                document.getElementById('maxClients').value = config.maxClients || '';
+            } catch (err) {
+                console.error('Error loading LAN config:', err);
+            }
+        }
+
+        async function saveLANConfig() {
+            const config = {
+                ipAddress: document.getElementById('lanIP').value,
+                subnetMask: document.getElementById('lanSubnet').value,
+                dhcpEnable: document.getElementById('dhcpEnable').value === 'true',
+                vlanId: parseInt(document.getElementById('vlanId').value) || 0,
+                vlanPriority: parseInt(document.getElementById('vlanPriority').value) || 0,
+                bridgeMode: document.getElementById('bridgeMode').value === 'true',
+                portIsolation: document.getElementById('portIsolation').value === 'true',
+                maxClients: parseInt(document.getElementById('maxClients').value) || 0
+            };
+
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/lan`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (res.ok) {
+                    alert('LAN configuration queued successfully!');
+                } else {
+                    const err = await res.json();
+                    alert('Error: ' + (err.error || 'Failed to save LAN configuration'));
+                }
+            } catch (err) {
+                console.error('Error saving LAN config:', err);
+                alert('Error saving LAN configuration: ' + err.message);
+            }
+        }
+
+        // --- Port Forwarding Functions ---
+        async function loadPortForwardingRules() {
+            const list = document.getElementById('portForwardingList');
+            list.innerHTML = '<div class="loading">Loading port forwarding rules...</div>';
+
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/port-forwarding`);
+                const rules = await res.json();
+
+                if (rules.length === 0) {
+                    list.innerHTML = '<div class="empty-state">No port forwarding rules configured</div>';
+                    return;
+                }
+
+                list.innerHTML = `
+                    <table class="wan-table">
+                        <thead>
+                            <tr>
+                                <th>External Port</th>
+                                <th>Internal Port</th>
+                                <th>Internal Client</th>
+                                <th>Protocol</th>
+                                <th>Status</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rules.map(rule => `
+                                <tr>
+                                    <td>${rule.externalPort}</td>
+                                    <td>${rule.internalPort}</td>
+                                    <td>${rule.internalClient}</td>
+                                    <td>${rule.protocol}</td>
+                                    <td><span class="${rule.enable ? 'val-enabled' : 'val-disabled'}">${rule.enable ? 'Enabled' : 'Disabled'}</span></td>
+                                    <td>${rule.description || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (err) {
+                console.error('Error loading port forwarding rules:', err);
+                list.innerHTML = '<div class="empty-state">Error loading port forwarding rules</div>';
+            }
+        }
+
+        async function addPortForwardingRule() {
+            const rule = {
+                externalPort: parseInt(document.getElementById('pfExternalPort').value),
+                internalPort: parseInt(document.getElementById('pfInternalPort').value),
+                internalClient: document.getElementById('pfInternalClient').value,
+                protocol: document.getElementById('pfProtocol').value,
+                enable: true,
+                description: document.getElementById('pfDescription').value
+            };
+
+            if (!rule.externalPort || !rule.internalPort || !rule.internalClient) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/port-forwarding`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(rule)
+                });
+
+                if (res.ok) {
+                    alert('Port forwarding rule added successfully!');
+                    // Clear form
+                    document.getElementById('pfExternalPort').value = '';
+                    document.getElementById('pfInternalPort').value = '';
+                    document.getElementById('pfInternalClient').value = '';
+                    document.getElementById('pfDescription').value = '';
+                    loadPortForwardingRules();
+                } else {
+                    const err = await res.json();
+                    alert('Error: ' + (err.error || 'Failed to add port forwarding rule'));
+                }
+            } catch (err) {
+                console.error('Error adding port forwarding rule:', err);
+                alert('Error adding port forwarding rule: ' + err.message);
+            }
+        }
+
+        // --- QoS Configuration Functions ---
+        async function loadQoSConfig() {
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/qos`);
+                const config = await res.json();
+
+                document.getElementById('qosEnable').value = config.enable ? 'true' : 'false';
+                document.getElementById('qosMaxBandwidth').value = config.maxBandwidth || '';
+                document.getElementById('qosPriority').value = config.priority || 'Medium';
+            } catch (err) {
+                console.error('Error loading QoS config:', err);
+            }
+        }
+
+        async function saveQoSConfig() {
+            const config = {
+                enable: document.getElementById('qosEnable').value === 'true',
+                maxBandwidth: parseInt(document.getElementById('qosMaxBandwidth').value) || 0,
+                priority: document.getElementById('qosPriority').value
+            };
+
+            try {
+                const res = await fetch(`/api/devices/${deviceId}/qos`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (res.ok) {
+                    alert('QoS configuration queued successfully!');
+                } else {
+                    const err = await res.json();
+                    alert('Error: ' + (err.error || 'Failed to save QoS configuration'));
+                }
+            } catch (err) {
+                console.error('Error saving QoS config:', err);
+                alert('Error saving QoS configuration: ' + err.message);
+            }
+        }
+
+        // Update showTab to handle new tabs
+        function showTab(tabId, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            if (el) {
+                el.classList.add('active');
+            } else {
+                const tabs = document.querySelectorAll('.tab');
+                for (let t of tabs) {
+                    if (t.getAttribute('onclick')?.includes(tabId)) {
+                        t.classList.add('active');
+                        break;
+                    }
+                }
+            }
+
+            const content = document.getElementById(tabId);
+            if (content) content.classList.add('active');
+
+            // Re-load data for specific tabs
+            if (tabId === 'wan') loadWan();
+            if (tabId === 'wlan') loadWlan();
+            if (tabId === 'lan') { loadLan(); loadLANConfig(); }
+            if (tabId === 'port-forwarding') loadPortForwardingRules();
+            if (tabId === 'qos') loadQoSConfig();
+            if (tabId === 'user') loadUser();
+            if (tabId === 'tr069') loadTR069();
+            if (tabId === 'params') loadAllParams();
+        }
+
+        fetchDevice();
+    </script>
+</body>
+
+</html>

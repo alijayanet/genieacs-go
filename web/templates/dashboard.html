@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - GO-ACS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #0ea5e9;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e1b4b;
+            --darker: #0f0d24;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --sidebar-width: 260px;
+        }
+        
+        /* Light theme variables */
+        .light-theme {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #818cf8;
+            --secondary: #0ea5e9;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #f8fafc;
+            --darker: #f1f5f9;
+            --light: #1e293b;
+            --gray: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--darker);
+            color: var(--light);
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--dark);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--light);
+            margin-bottom: 2rem;
+            padding: 0.5rem;
+        }
+
+        .sidebar-logo i {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #6366f1, #0ea5e9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            color: var(--gray);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .nav-item:hover {
+            background: var(--card-bg);
+            color: var(--light);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(14, 165, 233, 0.1));
+            color: var(--primary);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: var(--card-bg);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #6366f1, #0ea5e9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--light);
+            border: 1px solid var(--border);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-icon.purple {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1));
+            color: #a78bfa;
+        }
+
+        .stat-icon.green {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.1));
+            color: #34d399;
+        }
+
+        .stat-icon.red {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(248, 113, 113, 0.1));
+            color: #f87171;
+        }
+
+        .stat-icon.blue {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(56, 189, 248, 0.1));
+            color: #38bdf8;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .stat-change.up {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .stat-change.down {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+
+        /* Grid Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* Device Table */
+        .device-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .device-table th,
+        .device-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .device-table th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .device-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .device-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .device-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .device-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .device-name {
+            font-weight: 500;
+        }
+
+        .device-serial {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.online {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .status-badge.offline {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Activity List */
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.info {
+            background: rgba(14, 165, 233, 0.1);
+            color: #0ea5e9;
+        }
+
+        .activity-icon.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .activity-icon.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .activity-icon.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-size: 0.875rem;
+            margin-bottom: 4px;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        /* Device distribution */
+        .device-chart {
+            padding: 1rem 0;
+        }
+
+        .chart-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .chart-label {
+            width: 100px;
+            font-size: 0.875rem;
+            color: var(--gray);
+        }
+
+        .chart-track {
+            flex: 1;
+            height: 8px;
+            background: var(--card-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .chart-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .chart-fill.purple {
+            background: linear-gradient(to right, #6366f1, #8b5cf6);
+        }
+
+        .chart-fill.blue {
+            background: linear-gradient(to right, #0ea5e9, #38bdf8);
+        }
+
+        .chart-fill.green {
+            background: linear-gradient(to right, #10b981, #34d399);
+        }
+
+        .chart-fill.orange {
+            background: linear-gradient(to right, #f59e0b, #fbbf24);
+        }
+
+        .chart-value {
+            width: 40px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Live indicator */
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--success);
+        }
+
+        .live-indicator::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--light);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--card-bg);
+        }
+        
+        /* Bottom Navigation for Mobile */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--dark);
+            border-top: 1px solid var(--border);
+            z-index: 100;
+            padding: 10px 0;
+        }
+        
+        .bottom-nav.show {
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .bottom-nav a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 5px 10px;
+            transition: color 0.3s;
+        }
+        
+        .bottom-nav a i {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+        
+        .bottom-nav a:hover {
+            color: var(--light);
+        }
+        
+        .bottom-nav a.active {
+            color: var(--primary);
+        }
+    </style>
+    <!-- Sidebar loaded via sidebar.js -->
+    <script src="/static/js/sidebar.js"></script>
+</head>
+
+<body>
+    <!-- Sidebar will be injected automatically by sidebar.js -->
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h1>Dashboard</h1>
+                <span class="live-indicator">Live updates</span>
+            </div>
+            <div class="header-actions">
+                <a href="/devices" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add Device
+                </a>
+                <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-router"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="totalDevices">0</div>
+                <div class="stat-label">Total Devices</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon green">
+                        <i class="fas fa-signal"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="onlineDevices">0</div>
+                <div class="stat-label">Online</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon red">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="offlineDevices">0</div>
+                <div class="stat-label">Offline</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="totalCustomers">0</div>
+                <div class="stat-label">Customers</div>
+            </div>
+        </div>
+
+        <!-- Second Row Stats -->
+        <div class="stats-grid" style="margin-bottom: 2rem;">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon green"
+                        style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.1));">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+                <div class="stat-value" style="color: #10b981;" id="monthlyRevenue">Rp 0</div>
+                <div class="stat-label">This Month Revenue</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon"
+                        style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.1)); color: #fbbf24;">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                </div>
+                <div class="stat-value" style="color: #f59e0b;" id="pendingInvoices">0</div>
+                <div class="stat-label">Pending Invoices</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon"
+                        style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(248, 113, 113, 0.1)); color: #f87171;">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-value" style="color: #ef4444;" id="overdueAmount">Rp 0</div>
+                <div class="stat-label">Overdue Amount</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon"
+                        style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.1)); color: #a78bfa;">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="openTickets">0</div>
+                <div class="stat-label">Open Tickets</div>
+            </div>
+        </div>
+
+        <!-- Network Stats (Today) -->
+        <div class="stats-grid" style="margin-bottom: 2rem;">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon purple" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="netDl">0 B</div>
+                <div class="stat-label">Total Download (Today)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon blue" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="netUl">0 B</div>
+                <div class="stat-label">Total Upload (Today)</div>
+            </div>
+            <div class="stat-card" style="grid-column: span 2;">
+                <div class="stat-header">
+                    <h4 style="margin:0; font-size:1rem; color: #cbd5e1;"><i class="fas fa-trophy"
+                            style="color: #f59e0b; margin-right:8px;"></i> Top Heavy Users</h4>
+                </div>
+                <div id="quickTopUsers" style="margin-top:15px; font-size:0.9rem; color: #94a3b8;">
+                    Loading usage data...
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="grid-2">
+            <!-- Recent Devices -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Devices</h2>
+                    <a href="/devices" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;">
+                        View All
+                    </a>
+                </div>
+                <table class="device-table">
+                    <thead>
+                        <tr>
+                            <th>Device</th>
+                            <th>Model</th>
+                            <th>Status</th>
+                            <th>Last Contact</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentDevices">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--gray); padding: 2rem;">
+                                <i class="fas fa-router"
+                                    style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                                No devices registered yet
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Activity & Stats -->
+            <div>
+                <!-- Device Distribution -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">Device Distribution</h2>
+                    </div>
+                    <div class="device-chart" id="deviceChart">
+                        <div style="text-align: center; color: var(--gray); padding: 1rem;">
+                            No data available
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Activity</h2>
+                    </div>
+                    <ul class="activity-list" id="activityList">
+                        <li class="activity-item">
+                            <div class="activity-icon info">
+                                <i class="fas fa-info"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-text">System started</div>
+                                <div class="activity-time">Just now</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // WebSocket connection
+        let ws = null;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = function () {
+                console.log('WebSocket connected');
+            };
+
+            ws.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+
+            ws.onclose = function () {
+                console.log('WebSocket disconnected, reconnecting in 5s...');
+                setTimeout(connectWebSocket, 5000);
+            };
+
+            ws.onerror = function (error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'device_update':
+                    loadDashboardData();
+                    break;
+                case 'pong':
+                    // Keep-alive response
+                    break;
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard/stats');
+                const stats = await response.json();
+
+                let totalDevices = stats.totalDevices || 0;
+                let onlineDevices = stats.onlineDevices || 0;
+                let offlineDevices = stats.offlineDevices || 0;
+
+                // If stats are zero, fallback to counting from /api/devices
+                if (totalDevices === 0) {
+                    try {
+                        const devRes = await fetch('/api/devices?limit=1000');
+                        const devData = await devRes.json();
+                        const devices = devData.devices || [];
+                        totalDevices = devices.length;
+                        onlineDevices = devices.filter(d => d.status === 'online').length;
+                        offlineDevices = totalDevices - onlineDevices;
+                    } catch (e) {
+                        console.error('Fallback device count failed:', e);
+                    }
+                }
+
+                document.getElementById('totalDevices').textContent = totalDevices;
+                document.getElementById('onlineDevices').textContent = onlineDevices;
+                document.getElementById('offlineDevices').textContent = offlineDevices;
+
+                // Update device distribution chart
+                updateDeviceChart(stats.devicesByModel);
+
+                // Update activity list
+                updateActivityList(stats.recentActivity);
+
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                // Try to load device counts directly as fallback
+                try {
+                    const devRes = await fetch('/api/devices?limit=1000');
+                    const devData = await devRes.json();
+                    const devices = devData.devices || [];
+                    document.getElementById('totalDevices').textContent = devices.length;
+                    document.getElementById('onlineDevices').textContent = devices.filter(d => d.status === 'online').length;
+                    document.getElementById('offlineDevices').textContent = devices.filter(d => d.status === 'offline').length;
+                } catch (e) {
+                    console.error('Device fallback also failed:', e);
+                }
+            }
+
+            // Load recent devices
+            loadRecentDevices();
+
+            // Load additional stats
+            loadCustomerStats();
+            loadBillingStats();
+            loadTicketStats();
+            loadNetworkStats();
+        }
+
+        async function loadCustomerStats() {
+            try {
+                const response = await fetch('/api/customers?limit=1');
+                const data = await response.json();
+                document.getElementById('totalCustomers').textContent = data.total || 0;
+            } catch (error) {
+                console.error('Error loading customer stats:', error);
+            }
+        }
+
+        async function loadBillingStats() {
+            try {
+                const response = await fetch('/api/billing/stats');
+                const data = await response.json();
+                if (data) {
+                    document.getElementById('monthlyRevenue').textContent = formatCurrency(data.monthlyRevenue || 0);
+                    document.getElementById('pendingInvoices').textContent = data.pendingInvoices || 0;
+                    document.getElementById('overdueAmount').textContent = formatCurrency(data.overdueAmount || 0);
+                }
+            } catch (error) {
+                console.error('Error loading billing stats:', error);
+            }
+        }
+
+        async function loadTicketStats() {
+            try {
+                const response = await fetch('/api/tickets?status=open&limit=1');
+                const data = await response.json();
+                // Count open tickets
+                const openCount = data.tickets ? data.tickets.length : 0;
+                document.getElementById('openTickets').textContent = openCount;
+            } catch (error) {
+                console.error('Error loading ticket stats:', error);
+            }
+        }
+
+        function formatCurrency(amount) {
+            if (amount >= 1000000) {
+                return 'Rp ' + (amount / 1000000).toFixed(1) + 'M';
+            }
+            return 'Rp ' + amount.toLocaleString('id-ID');
+        }
+
+        async function loadRecentDevices() {
+            try {
+                const response = await fetch('/api/devices?limit=5');
+                const data = await response.json();
+
+                console.log('Dashboard devices API response:', data);
+
+                const tbody = document.getElementById('recentDevices');
+
+                if (!data.devices || data.devices.length === 0) {
+                    console.log('No devices found in response');
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--gray); padding: 2rem;">
+                                <i class="fas fa-router" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                                No devices registered yet
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                console.log('Rendering', data.devices.length, 'devices');
+
+                tbody.innerHTML = data.devices.map(device => `
+                    <tr onclick="window.location='/device/${device.id}'" style="cursor: pointer;">
+                        <td>
+                            <div class="device-info">
+                                <div class="device-icon">
+                                    <i class="fas fa-router"></i>
+                                </div>
+                                <div>
+                                    <div class="device-name">${device.manufacturer || 'Unknown'}</div>
+                                    <div class="device-serial">${device.serialNumber}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${device.modelName || 'N/A'}</td>
+                        <td>
+                            <span class="status-badge ${device.status}">${device.status}</span>
+                        </td>
+                        <td>${formatTimeAgo(device.lastContact)}</td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Failed to load devices:', error);
+            }
+        }
+
+        function updateDeviceChart(devicesByModel) {
+            const container = document.getElementById('deviceChart');
+
+            if (!devicesByModel || Object.keys(devicesByModel).length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--gray); padding: 1rem;">
+                        No data available
+                    </div>
+                `;
+                return;
+            }
+
+            const colors = ['purple', 'blue', 'green', 'orange'];
+            const total = Object.values(devicesByModel).reduce((a, b) => a + b, 0);
+
+            container.innerHTML = Object.entries(devicesByModel)
+                .slice(0, 4)
+                .map(([model, count], index) => {
+                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                    return `
+                        <div class="chart-bar">
+                            <div class="chart-label">${model}</div>
+                            <div class="chart-track">
+                                <div class="chart-fill ${colors[index]}" style="width: ${percentage}%"></div>
+                            </div>
+                            <div class="chart-value">${count}</div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        function updateActivityList(activities) {
+            const container = document.getElementById('activityList');
+
+            if (!activities || activities.length === 0) {
+                container.innerHTML = `
+                    <li class="activity-item">
+                        <div class="activity-icon info">
+                            <i class="fas fa-info"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-text">System started</div>
+                            <div class="activity-time">Just now</div>
+                        </div>
+                    </li>
+                `;
+                return;
+            }
+
+            const iconMap = {
+                'inform': { icon: 'fa-signal', class: 'success' },
+                'device': { icon: 'fa-router', class: 'info' },
+                'wifi': { icon: 'fa-wifi', class: 'info' },
+                'command': { icon: 'fa-terminal', class: 'warning' },
+                'error': { icon: 'fa-exclamation', class: 'error' }
+            };
+
+            container.innerHTML = activities.slice(0, 5).map(activity => {
+                const iconInfo = iconMap[activity.type] || { icon: 'fa-info', class: 'info' };
+                return `
+                    <li class="activity-item">
+                        <div class="activity-icon ${iconInfo.class}">
+                            <i class="fas ${iconInfo.icon}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-text">${activity.message}</div>
+                            <div class="activity-time">${formatTimeAgo(activity.timestamp)}</div>
+                        </div>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        function formatTimeAgo(dateString) {
+            if (!dateString) return 'Never';
+
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+            const diffDay = Math.floor(diffHour / 24);
+
+            if (diffSec < 60) return 'Just now';
+            if (diffMin < 60) return `${diffMin}m ago`;
+            if (diffHour < 24) return `${diffHour}h ago`;
+            if (diffDay < 7) return `${diffDay}d ago`;
+
+            return date.toLocaleDateString();
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        async function loadNetworkStats() {
+            try {
+                const response = await fetch('/api/network/stats');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const s = result.data;
+                    document.getElementById('netDl').textContent = formatBytes(s.totalDownload);
+                    document.getElementById('netUl').textContent = formatBytes(s.totalUpload);
+
+                    const topDiv = document.getElementById('quickTopUsers');
+                    if (s.topUsers && s.topUsers.length > 0) {
+                        topDiv.innerHTML = s.topUsers.slice(0, 3).map(u =>
+                            `<div style="display:flex; justify-content:space-between; margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid #334155;">
+                        <span style="color: #64748b; font-weight:500;">${u.label}</span>
+                        <span style="font-weight:bold; color:#ef4444;">${formatBytes(u.bytesReceived)}</span>
+                    </div>`
+                        ).join('');
+                    } else {
+                        topDiv.textContent = "No usage data available yet";
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading network stats:', error);
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Theme functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('theme-toggle');
+            const icon = themeToggle.querySelector('i');
+            
+            if (body.classList.contains('light-theme')) {
+                body.classList.remove('light-theme');
+                localStorage.setItem('theme', 'dark');
+                icon.className = 'fas fa-moon';
+            } else {
+                body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+                icon.className = 'fas fa-sun';
+            }
+        }
+        
+        // Initialize theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const body = document.body;
+            const themeToggle = document.getElementById('theme-toggle');
+            const icon = themeToggle.querySelector('i');
+            
+            if (savedTheme === 'light') {
+                body.classList.add('light-theme');
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
+        }
+        
+        // Show bottom navigation on mobile
+        function initBottomNav() {
+            const mediaQuery = window.matchMedia('(max-width: 768px)');
+            
+            function handleMediaChange(e) {
+                if (e.matches) {
+                    document.querySelector('.bottom-nav').classList.add('show');
+                } else {
+                    document.querySelector('.bottom-nav').classList.remove('show');
+                }
+            }
+            
+            handleMediaChange(mediaQuery);
+            mediaQuery.addListener(handleMediaChange);
+        }
+        
+        // Scroll to section function
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check auth
+            if (!localStorage.getItem('token')) {
+                window.location.href = '/';
+                return;
+            }
+
+            // Load user info
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const userNameEl = document.getElementById('userName');
+            if (user.username && userNameEl) {
+                userNameEl.textContent = user.username;
+            }
+
+            // Initialize theme and bottom navigation
+            initTheme();
+            initBottomNav();
+
+            // Load data
+            loadDashboardData();
+
+            // Connect WebSocket
+            connectWebSocket();
+
+            // Refresh data periodically
+            setInterval(loadDashboardData, 30000);
+        });
+    </script>
+    
+    <!-- Bottom Navigation for Mobile -->
+    <nav class="bottom-nav">
+        <a href="/dashboard">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="/devices">
+            <i class="fas fa-router"></i>
+            <span>Devices</span>
+        </a>
+        <a href="/map">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Map</span>
+        </a>
+        <a href="#" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+            <span>Theme</span>
+        </a>
+    </nav>
+</body>
+
+</html>

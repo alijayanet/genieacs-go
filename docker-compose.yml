@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  go-acs:
+    build: .
+    container_name: go-acs
+    ports:
+      - "8080:8080"     # Web UI & API
+      - "7547:7547"     # TR-069 endpoint
+    environment:
+      - SERVER_PORT=8080
+      - TR069_PORT=7547
+      - DATABASE_URL=/app/data/goacs.db
+      - AUTH_ENABLED=true
+      - ADMIN_USER=admin
+      - ADMIN_PASS=admin123
+      - LOG_LEVEL=info
+    volumes:
+      - goacs_data:/app/data
+    restart: unless-stopped
+    networks:
+      - goacs-network
+
+volumes:
+  goacs_data:
+
+networks:
+  goacs-network:
+    driver: bridge
