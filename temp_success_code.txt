@@ -1,0 +1,15 @@
+	
+	sendLog("Update completed!", "success")
+	
+	// Get new commit hash
+	newCommit, _ := exec.Command("git", "rev-parse", "HEAD").Output()
+	newHash := strings.TrimSpace(string(newCommit))[:7]
+	
+	// Calculate duration
+	duration := time.Since(startTime).Round(time.Second).String()
+	
+	// Send success notification
+	if h.Telegram != nil {
+		go h.Telegram.SendUpdateSuccess(newHash, duration)
+	}
+}
