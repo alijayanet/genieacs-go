@@ -25,7 +25,8 @@ const sidebarConfig = {
     ],
     footer: {
         version: 'v1.0.0',
-        copyright: '© 2026 GO-ACS'
+        copyright: '© 2026 ALIJAYA-NET',
+        contact: '081947215703'
     }
 };
 
@@ -74,6 +75,14 @@ function renderSidebar() {
     // Footer
     html += `
         <div class="sidebar-footer">
+            <a href="/logout" class="sidebar-logout" onclick="logout(event)">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+            ${sidebarConfig.footer.contact ? `
+            <div class="sidebar-contact">
+                <i class="fas fa-phone"></i> ${sidebarConfig.footer.contact}
+            </div>
+            ` : ''}
             <div class="sidebar-version">${sidebarConfig.footer.version}</div>
             <div class="sidebar-copyright">${sidebarConfig.footer.copyright}</div>
         </div>
@@ -171,6 +180,42 @@ function initSidebar() {
                 font-size: 0.65rem;
                 color: var(--gray, #64748b);
                 margin-top: 0.25rem;
+            }
+            
+            .sidebar-logout {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+                color: #ef4444;
+                text-decoration: none;
+                border-radius: 8px;
+                transition: all 0.2s;
+                font-weight: 500;
+                border: 1px solid rgba(239, 68, 68, 0.2);
+            }
+            
+            .sidebar-logout:hover {
+                background: rgba(239, 68, 68, 0.1);
+                color: #dc2626;
+            }
+            
+            .sidebar-contact {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 0.5rem;
+                margin-bottom: 0.75rem;
+                font-size: 0.75rem;
+                color: var(--primary, #6366f1);
+                font-weight: 500;
+            }
+            
+            .sidebar-contact i {
+                font-size: 0.85rem;
             }
             
             /* Mobile Sidebar Toggle */
@@ -335,3 +380,28 @@ window.addEventListener('DOMContentLoaded', function() {
     initTheme();
     initBottomNav();
 });
+
+// Logout function
+window.logout = function(event) {
+    event.preventDefault();
+    
+    if (confirm('Are you sure you want to logout?')) {
+        // Clear token from localStorage
+        localStorage.removeItem('token');
+        
+        // Call logout API
+        fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(() => {
+            // Redirect to login page
+            window.location.href = '/';
+        }).catch(err => {
+            console.error('Logout error:', err);
+            // Redirect anyway on error
+            window.location.href = '/';
+        });
+    }
+};
