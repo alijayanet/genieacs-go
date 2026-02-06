@@ -961,33 +961,27 @@ func (h *Handler) RefreshDevice(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetWiFiConfig(w http.ResponseWriter, r *http.Request) {
 	id := getPathInt64(r, "id")
 
-	// Get parameters from multiple common paths for different vendors
-	params := []*models.DeviceParameter{}
-
-	// Try TR-181 path first
-	tr181Params, err := h.DB.GetDeviceParameters(id, "Device.WiFi.")
-	if err == nil {
-		params = append(params, tr181Params...)
+	// Get ALL parameters without path filter to find SSID anywhere
+	allParams, err := h.DB.GetDeviceParameters(id, "")
+	if err != nil {
+		respondJSON(w, http.StatusOK, map[string]interface{}{
+			"ssid":     "",
+			"password": "",
+			"enabled":  false,
+		})
+		return
 	}
-
-	// Try TR-098 path
-	tr098Params, _ := h.DB.GetDeviceParameters(id, "InternetGatewayDevice.LANDevice.1.WLANConfiguration.")
-	params = append(params, tr098Params...)
-
-	// Also try some vendor-specific paths
-	vendorParams, _ := h.DB.GetDeviceParameters(id, "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.")
-	params = append(params, vendorParams...)
 
 	// Build WiFi config from parameters
 	config := models.WiFiConfig{}
-	for _, p := range params {
+	for _, p := range allParams {
 		switch {
-		case contains(p.Path, "SSID") && !contains(p.Path, "Hidden"):
-			if config.SSID == "" { // Only set if not already set
+		case contains(p.Path, "SSID") && !contains(p.Path, "Hidden") && !contains(p.Path, "BSSID"):
+			if config.SSID == "" && p.Value != "" && p.Value != "null" && p.Value != "N/A" { // Only set if not already set
 				config.SSID = p.Value
 			}
 		case contains(p.Path, "KeyPassphrase") || contains(p.Path, "PreSharedKey"):
-			if config.Password == "" { // Only set if not already set
+			if config.Password == "" && p.Value != "" && p.Value != "null" { // Only set if not already set
 				config.Password = p.Value
 			}
 		case contains(p.Path, "BeaconType") || contains(p.Path, "SecurityMode"):
@@ -1001,23 +995,27 @@ func (h *Handler) GetWiFiConfig(w http.ResponseWriter, r *http.Request) {
 		case contains(p.Path, "Enable"):
 			config.Enabled = p.Value == "true" || p.Value == "1"
 		case contains(p.Path, "Name") && contains(p.Path, "SSID"): // Some vendors use Name for SSID
-			if config.SSID == "" {
+			if config.SSID == "" && p.Value != "" && p.Value != "null" {
 				config.SSID = p.Value
 			}
 		case contains(p.Path, "X_HW_SSID"): // Huawei specific
-			if config.SSID == "" {
+			if config.SSID == "" && p.Value != "" && p.Value != "null" {
 				config.SSID = p.Value
 			}
 		case contains(p.Path, "X_ZTE_SSID"): // ZTE specific
-			if config.SSID == "" {
+			if config.SSID == "" && p.Value != "" && p.Value != "null" {
 				config.SSID = p.Value
 			}
 		case contains(p.Path, "X_FH_SSID"): // FiberHome specific
-			if config.SSID == "" {
+			if config.SSID == "" && p.Value != "" && p.Value != "null" {
 				config.SSID = p.Value
 			}
 		case contains(p.Path, "X_CT-COM_SSID"): // China Telecom specific
-			if config.SSID == "" {
+			if config.SSID == "" && p.Value != "" && p.Value != "null" {
+				config.SSID = p.Value
+			}
+		case contains(p.Path, "X_CIOT_SSID"): // CIOT specific
+			if config.SSID == "" && p.Value != "" && p.Value != "null" {
 				config.SSID = p.Value
 			}
 		case contains(p.Path, "TransmitPower"):
@@ -2976,6 +2974,10 @@ func (h *Handler) GetCustomerWiFi(w http.ResponseWriter, r *http.Request) {
 				config.SSID = p.Value
 			}
 		case contains(p.Path, "X_CT-COM_SSID"): // China Telecom specific
+			if config.SSID == "" {
+				config.SSID = p.Value
+			}
+		case contains(p.Path, "X_CIOT_SSID"): // CIOT specific
 			if config.SSID == "" {
 				config.SSID = p.Value
 			}
