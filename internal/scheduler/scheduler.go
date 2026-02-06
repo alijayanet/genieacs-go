@@ -1,8 +1,10 @@
 package scheduler
 
 import (
+	"encoding/json"
 	"fmt"
 	"go-acs/internal/handlers"
+	"go-acs/internal/models"
 	"time"
 )
 
@@ -31,6 +33,14 @@ func (s *Scheduler) Start() {
 	go func() {
 		for range monitorTicker.C {
 			s.runBandwidthMonitor()
+		}
+	}()
+
+	// Task Worker (Process pending tasks every 10 seconds)
+	taskTicker := time.NewTicker(10 * time.Second)
+	go func() {
+		for range taskTicker.C {
+			s.processPendingTasks()
 		}
 	}()
 }
@@ -83,4 +93,115 @@ func (s *Scheduler) runBandwidthMonitor() {
 			}
 		}
 	}
+}
+
+func (s *Scheduler) processPendingTasks() {
+	// Get pending tasks
+	tasks, err := s.handler.DB.GetPendingTasks(0) // 0 = all devices
+	if err != nil {
+		fmt.Printf("[TASK WORKER] Error fetching pending tasks: %v\n", err)
+		return
+	}
+
+	if len(tasks) == 0 {
+		return
+	}
+
+	fmt.Printf("[TASK WORKER] Processing %d pending tasks...\n", len(tasks))
+
+	for _, task := range tasks {
+		fmt.Printf("[TASK WORKER] Processing task %d (type: %s, device: %d)\n", task.ID, task.Type, task.DeviceID)
+
+		// Update task status to processing
+		s.handler.DB.UpdateTaskStatus(task.ID, models.TaskStatusProcessing, nil, "")
+
+		// Process task based on type
+		var err error
+		switch task.Type {
+		case "getParameterValues":
+			err = s.processGetParameterValues(task)
+		case "setParameterValues":
+			err = s.processSetParameterValues(task)
+		case "refresh":
+			err = s.processRefresh(task)
+		case "reboot":
+			err = s.processReboot(task)
+		case "factoryReset":
+			err = s.processFactoryReset(task)
+		default:
+			fmt.Printf("[TASK WORKER] Unknown task type: %s\n", task.Type)
+			err = fmt.Errorf("unknown task type")
+		}
+
+		// Update task status
+		if err != nil {
+			errMsg := err.Error()
+			s.handler.DB.UpdateTaskStatus(task.ID, models.TaskStatusFailed, nil, errMsg)
+			fmt.Printf("[TASK WORKER] Task %d failed: %v\n", task.ID, err)
+		} else {
+			s.handler.DB.UpdateTaskStatus(task.ID, models.TaskStatusCompleted, nil, "")
+			fmt.Printf("[TASK WORKER] Task %d completed\n", task.ID)
+		}
+	}
+}
+
+func (s *Scheduler) processGetParameterValues(task *models.DeviceTask) error {
+	// Get device
+	device, err := s.handler.DB.GetDevice(task.DeviceID)
+	if err != nil {
+		return fmt.Errorf("device not found: %v", err)
+	}
+
+	// Get WiFi parameters - this will be sent when device next connects
+	// For now, mark as completed since we can't force device to send parameters
+	fmt.Printf("[TASK WORKER] GetParameterValues for device %s (%s) - will be sent on next Inform\n", device.SerialNumber, device.Manufacturer)
+	return nil
+}
+
+func (s *Scheduler) processSetParameterValues(task *models.DeviceTask) error {
+	// Get device
+	device, err := s.handler.DB.GetDevice(task.DeviceID)
+	if err != nil {
+		return fmt.Errorf("device not found: %v", err)
+	}
+
+	fmt.Printf("[TASK WORKER] SetParameterValues for device %s (%s)\n", device.SerialNumber, device.Manufacturer)
+	// TODO: Implement parameter value setting
+	return nil
+}
+
+func (s *Scheduler) processRefresh(task *models.DeviceTask) error {
+	// Get device
+	device, err := s.handler.DB.GetDevice(task.DeviceID)
+	if err != nil {
+		return fmt.Errorf("device not found: %v", err)
+	}
+
+	fmt.Printf("[TASK WORKER] Refresh for device %s (%s)\n", device.SerialNumber, device.Manufacturer)
+	// TODO: Implement refresh - trigger GetParameterValues for WiFi
+	return nil
+}
+
+func (s *Scheduler) processReboot(task *models.DeviceTask) error {
+	// Get device
+	device, err := s.handler.DB.GetDevice(task.DeviceID)
+	if err != nil {
+		return fmt.Errorf("device not found: %v", err)
+	}
+
+	fmt.Printf("[TASK WORKER] Reboot for device %s (%s)\n", device.SerialNumber, device.Manufacturer)
+	// TODO: Implement reboot
+	return nil
+}
+
+func (s *Scheduler) processFactoryReset(task *models.DeviceTask) error {
+	// Get device
+	device, err := s.handler.DB.GetDevice(task.DeviceID)
+	if err != nil {
+		return fmt.Errorf("device not found: %v", err)
+	}
+
+	fmt.Printf("[TASK WORKER] Factory reset for device %s (%s)\n", device.SerialNumber, device.Manufacturer)
+	// TODO: Implement factory reset
+	return nil
 }
