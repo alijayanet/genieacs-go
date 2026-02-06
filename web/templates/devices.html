@@ -145,6 +145,26 @@
             renderDevices(data.devices || []);
         }
 
+        async function loadDeviceDetails(deviceId) {
+            try {
+                // Fetch WiFi SSID data
+                const wifiRes = await fetch(`/api/devices/${deviceId}/wifi`);
+                const wifiData = await wifiRes.json();
+
+                // Fetch connected clients
+                const clientsRes = await fetch(`/api/devices/${deviceId}/clients`);
+                const clientsData = await clientsRes.json();
+
+                return {
+                    ssid: wifiData.ssid || 'N/A',
+                    clients: clientsData.clients || []
+                };
+            } catch (err) {
+                console.error('Error loading device details:', err);
+                return { ssid: 'N/A', clients: [] };
+            }
+        }
+
         function renderDevices(devices) {
             const grid = document.getElementById('deviceGrid');
             if (!devices.length) {
@@ -175,6 +195,31 @@
                     </div>
                 </div>
             `}).join('');
+
+            // Load details for each device (SSID and clients)
+            devices.forEach(async (device) => {
+                const details = await loadDeviceDetails(device.id);
+                const deviceCard = document.querySelector(`.device-card[onclick*="${device.id}"]`);
+                if (deviceCard) {
+                    // Add SSID display
+                    const ssidHtml = `<div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--gray);">
+                        <i class="fas fa-wifi"></i> SSID: <span style="color: var(--primary);">${details.ssid}</span>
+                    </div>`;
+
+                    // Add connected hosts display
+                    let clientsHtml = '';
+                    if (details.clients.length > 0) {
+                        const topClients = details.clients.slice(0, 3);
+                        clientsHtml = `<div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--gray);">
+                            <i class="fas fa-users"></i> Connected:
+                            ${topClients.map(c => `<span style="margin-left: 5px; color: var(--light);">${c.name || 'Unknown'} (${c.ip || 'N/A'})</span>`).join('')}
+                            ${details.clients.length > 3 ? `<span style="margin-left: 5px;">+${details.clients.length - 3} more</span>` : ''}
+                        </div>`;
+                    }
+
+                    deviceCard.insertAdjacentHTML('beforeend', ssidHtml + clientsHtml);
+                }
+            });
         }
 
         function showAddModal() { document.getElementById('addModal').classList.add('active'); }
