@@ -3658,13 +3658,36 @@ func (h *Handler) CreateMikrotikProfile(w http.ResponseWriter, r *http.Request) 
 
 // CheckForUpdates checks for available updates from GitHub
 func (h *Handler) CheckForUpdates(w http.ResponseWriter, r *http.Request) {
+	// Check if git is available
+	if _, err := exec.LookPath("git"); err != nil {
+		respondError(w, http.StatusInternalServerError, "Git is not installed on this system")
+		return
+	}
+
+	// Check if we're in a git repository
+	if _, err := exec.Command("git", "rev-parse", "--git-dir").CombinedOutput(); err != nil {
+		respondError(w, http.StatusInternalServerError, "Not running from a git repository")
+		return
+	}
+
 	// Get current git info
 	currentBranch, _ := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD").Output()
 	currentCommit, _ := exec.Command("git", "rev-parse", "HEAD").Output()
 	lastUpdate, _ := exec.Command("git", "log", "-1", "--format=%cd", "--date=relative").Output()
 
+	// Try to get git tag for version
+	tagOutput, _ := exec.Command("git", "describe", "--tags", "--abbrev=0").Output()
+	version := strings.TrimSpace(string(tagOutput))
+	if version == "" {
+		// If no tag, use short commit hash
+		version = strings.TrimSpace(string(currentCommit))[:7]
+	}
+
 	// Fetch from remote
-	exec.Command("git", "fetch", "origin").Run()
+	if err := exec.Command("git", "fetch", "origin").Run(); err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to fetch from remote repository: "+err.Error())
+		return
+	}
 
 	// Check if we're behind
 	behindOutput, _ := exec.Command("git", "rev-list", "--count", "HEAD..origin/"+strings.TrimSpace(string(currentBranch))).Output()
@@ -3674,7 +3697,7 @@ func (h *Handler) CheckForUpdates(w http.ResponseWriter, r *http.Request) {
 	latestMsg, _ := exec.Command("git", "log", "origin/"+strings.TrimSpace(string(currentBranch)), "-1", "--format=%s").Output()
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
-		"current_version":       "v1.0.0",
+		"current_version":       version,
 		"current_branch":        strings.TrimSpace(string(currentBranch)),
 		"current_commit":        strings.TrimSpace(string(currentCommit))[:7],
 		"last_update":           strings.TrimSpace(string(lastUpdate)),
