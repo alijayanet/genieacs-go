@@ -40,30 +40,43 @@ go-acs/
 └── README.md
 ```
 
-## 🚀 Quick Start
+## � Instalasi
+
+### Clone Repository
+
+```bash
+git clone https://github.com/alijayanet/genieacs-go.git
+cd genieacs-go
+```
 
 ### Prerequisites
 
-- Go 1.21 atau lebih baru
-- Git
+- **Go 1.21** atau lebih baru
+- **Git**
 
-### Instalasi (Automated)
+### Cara Install
 
-Jika Anda menggunakan Linux (Ubuntu/Armbian) atau WSL, gunakan script installer otomatis:
+#### Opsi 1: Automated Installation (Linux/Ubuntu/Armbian/WSL)
+
+Gunakan script installer otomatis:
 ```bash
 chmod +x install.sh
 sudo ./install.sh
 ```
 
-### Akses Aplikasi
+#### Opsi 2: Manual Build
 
-- **Admin Web UI**: [http://localhost:8080](http://localhost:8080)
-  - Login: `admin` / `admin123`
-- **Customer Portal**: [http://localhost:8080/portal/login](http://localhost:8080/portal/login)
-  - Login: Menggunakan **Customer Code** atau **Username** pelanggan
-- **TR-069 Endpoint**: `http://localhost:7547` (Gunakan IP Server untuk config di ONU)
+1. **Build binary**:
+```bash
+go build -o go-acs cmd/server/main.go
+```
 
-### Menggunakan Docker
+2. **Jalankan aplikasi**:
+```bash
+./go-acs
+```
+
+#### Opsi 3: Docker
 
 ```bash
 # Build image
@@ -72,6 +85,22 @@ docker build -t go-acs .
 # Run container
 docker run -d -p 8080:8080 -p 7547:7547 -v goacs_data:/app/data go-acs
 ```
+
+#### Opsi 4: Build untuk Linux Server
+
+```bash
+GOOS=linux GOARCH=amd64 go build -o go-acs-linux cmd/server/main.go
+```
+
+### Akses Aplikasi
+
+Setelah instalasi selesai, akses aplikasi melalui:
+
+- **Admin Web UI**: [http://localhost:8080](http://localhost:8080)
+  - Login: `admin` / `admin123`
+- **Customer Portal**: [http://localhost:8080/portal/login](http://localhost:8080/portal/login)
+  - Login: Menggunakan **Customer Code** atau **Username** pelanggan
+- **TR-069 Endpoint**: `http://localhost:7547` (Gunakan IP Server untuk config di ONU)
 
 ## ⚙️ Konfigurasi
 
@@ -199,6 +228,10 @@ Kontribusi sangat diterima! Silakan buat Pull Request atau Issue untuk perbaikan
 ## 📄 License
 
 MIT License - Lihat file [LICENSE](LICENSE) untuk detail.
+
+## 🔗 Repository
+
+Source code tersedia di: [https://github.com/alijayanet/genieacs-go](https://github.com/alijayanet/genieacs-go)
 
 ## 🙏 Credits
 
