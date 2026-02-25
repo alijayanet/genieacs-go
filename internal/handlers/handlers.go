@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"math/big"
 	"net/http"
-	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -179,7 +178,11 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	h.DB.UpdateUser(user)
 
 	// Generate a proper JWT token
-	token := generateJWT(user)
+	token, err := generateJWT(user, h.Config.JWTSecret)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to generate token")
+		return
+	}
 
 	respondJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
@@ -1831,7 +1834,11 @@ func respondError(w http.ResponseWriter, status int, message string) {
 }
 
 // generateJWT generates a JWT token for the user
-func generateJWT(user *models.User) string {
+func generateJWT(user *models.User, jwtSecret string) (string, error) {
+	if jwtSecret == "" {
+		return "", fmt.Errorf("JWT secret is required")
+	}
+	
 	claims := jwt.MapClaims{
 		"user_id":  user.ID,
 		"username": user.Username,
@@ -1839,13 +1846,13 @@ func generateJWT(user *models.User) string {
 		"exp":      time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	// Use the JWT secret from config
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "go-acs-secret-key-change-in-production" // Default fallback
+	
+	signedToken, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", fmt.Errorf("failed to sign token: %v", err)
 	}
-	signedToken, _ := token.SignedString([]byte(jwtSecret))
-	return signedToken
+	
+	return signedToken, nil
 }
 
 // generateUsernameFromName creates a username from customer name
@@ -2778,8 +2785,8 @@ func (h *Handler) CustomerLogin(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Verify password (in production, use proper password hashing)
-	if customer.Password != req.Password {
+	// Verify password using bcrypt
+	if err := bcrypt.CompareHashAndPassword([]byte(customer.Password), []byte(req.Password)); err != nil {
 		respondError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}

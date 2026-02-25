@@ -7,12 +7,14 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"go-acs/internal/config"
 	"go-acs/internal/database"
 	"go-acs/internal/handlers"
 	"go-acs/internal/mailer"
+	"go-acs/internal/middleware"
 	"go-acs/internal/mikrotik"
 	"go-acs/internal/notification/fcm"
 	"go-acs/internal/notification/telegram"
@@ -112,15 +114,28 @@ func main() {
 	// Setup router
 	router := setupRouter(h, wsHub)
 
-	// Setup CORS
+	// Setup CORS with more restrictive settings
+	allowedOrigins := []string{
+		"http://localhost:8080",
+		"http://localhost:3000",
+	}
+	
+	// Add additional origins from environment if needed
+	if origin := os.Getenv("ALLOWED_ORIGINS"); origin != "" {
+		allowedOrigins = append(allowedOrigins, strings.Split(origin, ",")...)
+	}
+	
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Requested-With"},
 		AllowCredentials: true,
+		MaxAge:           300, // 5 minutes
 	})
 
-	handler := c.Handler(router)
+	// Apply authentication middleware
+	authMiddleware := middleware.AuthMiddleware(cfg.JWTSecret)
+	handler := c.Handler(authMiddleware(router))
 
 	// Start HTTP server
 	addr := fmt.Sprintf(":%d", cfg.ServerPort)

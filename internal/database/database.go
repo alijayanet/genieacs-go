@@ -55,6 +55,11 @@ func InitDB(dbPath string) (*DB, error) {
 	wrapper.checkAndMigrateDevicesTable()
 	wrapper.checkAndMigrateCustomersTable()
 
+	// Migrate customer passwords to bcrypt
+	if err := wrapper.MigrateCustomerPasswords(); err != nil {
+		fmt.Printf("[DB] Warning: Failed to migrate customer passwords: %v\n", err)
+	}
+
 	// Ensure default admin user exists
 	wrapper.EnsureDefaultAdmin("admin", "admin123")
 
@@ -2308,6 +2313,45 @@ func (db *DB) GetUserByID(userID int64) (*models.User, error) {
 	}
 
 	return &user, nil
+}
+
+// MigrateCustomerPasswords migrates customer passwords to bcrypt hashing
+func (db *DB) MigrateCustomerPasswords() error {
+	rows, err := db.Query("SELECT id, password FROM customers WHERE password IS NOT NULL AND password != ''")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int64
+		var password string
+		if err := rows.Scan(&id, &password); err != nil {
+			continue
+		}
+
+		// Check if password is already hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
+		if strings.HasPrefix(password, "$2") {
+			continue
+		}
+
+		// Hash the password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			fmt.Printf("Failed to hash password for customer %d: %v\n", id, err)
+			continue
+		}
+
+		// Update the password
+		if _, err := db.Exec("UPDATE customers SET password = ? WHERE id = ?", string(hashedPassword), id); err != nil {
+			fmt.Printf("Failed to update password for customer %d: %v\n", id, err)
+			continue
+		}
+
+		fmt.Printf("✓ Migrated password for customer %d\n", id)
+	}
+
+	return nil
 }
 
 // EnsureDefaultAdmin ensures that a default admin user exists

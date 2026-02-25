@@ -1,8 +1,11 @@
 package config
 
 import (
+	"crypto/rand"
+	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 // Config holds the application configuration
@@ -33,12 +36,20 @@ type Config struct {
 
 // Load loads configuration from environment variables with defaults
 func Load() *Config {
+	jwtSecret := getEnv("JWT_SECRET", "")
+	if jwtSecret == "" {
+		// Generate a random JWT secret if not provided
+		jwtSecret = generateRandomSecret(32)
+		fmt.Printf("⚠️  WARNING: JWT_SECRET not set, generated random secret: %s\n", jwtSecret)
+		fmt.Printf("   Please set JWT_SECRET environment variable for production use!\n")
+	}
+	
 	return &Config{
 		ServerPort:              getEnvAsInt("SERVER_PORT", 8080),
 		TR069Port:               getEnvAsInt("TR069_PORT", 7547),
 		TR069Secure:             getEnvAsBool("TR069_SECURE", false),
 		DatabaseURL:             getEnv("DATABASE_URL", "./data/goacs.db"),
-		JWTSecret:               getEnv("JWT_SECRET", "go-acs-secret-key-change-in-production"),
+		JWTSecret:               jwtSecret,
 		LogLevel:                getEnv("LOG_LEVEL", "info"),
 		AuthEnabled:             getEnvAsBool("AUTH_ENABLED", true),
 		AdminUser:               getEnv("ADMIN_USER", "admin"),
@@ -65,6 +76,20 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// generateRandomSecret generates a cryptographically secure random string
+func generateRandomSecret(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback to time-based seed if crypto/rand fails
+		return fmt.Sprintf("fallback-secret-%d", time.Now().UnixNano())
+	}
+	for i := range b {
+		b[i] = charset[b[i]%byte(len(charset))]
+	}
+	return string(b)
 }
 
 func getEnvAsInt(key string, defaultValue int) int {

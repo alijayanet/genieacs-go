@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -222,9 +221,33 @@ func (s *Server) sendTask(w http.ResponseWriter, task *models.DeviceTask) {
 		}
 		response = CreateDownload(id, download.FileType, download.URL, download.FileSize, download.Username, download.Password)
 	case models.TaskRefresh:
-		// Refresh usually means GetParameterValues for root or common paths
-		// We'll fetch both TR-098 and TR-181 roots
-		response = CreateGetParameterValues(id, []string{"InternetGatewayDevice.", "Device."})
+		// Build comprehensive parameter list using vendor-aware resolver
+		device, _ := s.DB.GetDevice(task.DeviceID)
+		standardParams := GetStandardONUParameters()
+		commonParams := GetONUCommonParameters()
+		vendorResolver := NewVendorSpecificParameterResolver(device.Manufacturer, device.ModelName)
+		vendorParams := vendorResolver.GetVendorSpecificParameters()
+
+		allPaths := make([]string, 0)
+		for _, category := range standardParams {
+			for _, param := range category.Parameters {
+				allPaths = append(allPaths, param.Path)
+			}
+		}
+		allPaths = append(allPaths, commonParams...)
+		allPaths = append(allPaths, vendorParams...)
+
+		legacyPaths := []string{
+			"InternetGatewayDevice.LANDevice.1.WLANConfiguration.",
+			"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.",
+			"InternetGatewayDevice.LANDevice.1.Hosts.",
+			"InternetGatewayDevice.DeviceInfo.",
+		}
+		allPaths = append(allPaths, legacyPaths...)
+		if strings.Contains(strings.ToUpper(device.Manufacturer), "HUAWEI") {
+			allPaths = append(allPaths, "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_HW_VenderClassID")
+		}
+		response = CreateGetParameterValues(id, allPaths)
 	default:
 		log.Printf("Unsupported task type: %s", task.Type)
 		w.WriteHeader(http.StatusNoContent)
@@ -346,125 +369,38 @@ func (s *Server) handleInform(envelope *SOAPEnvelope, r *http.Request) *SOAPEnve
 		device.IPAddress = strings.Split(r.RemoteAddr, ":")[0]
 		device.ClientCount = 0 // Reset for summation
 
-		// Update device info from Inform
+		// Update device info from Inform using new parameter parser
+		parser := NewDeviceParameterParser(device, device.Manufacturer, device.ModelName)
 		for _, param := range inform.ParameterList.ParameterValueStruct {
-			switch param.Name {
-			case "InternetGatewayDevice.DeviceInfo.SoftwareVersion",
-				"Device.DeviceInfo.SoftwareVersion":
-				device.SoftwareVersion = param.Value
-			case "InternetGatewayDevice.DeviceInfo.HardwareVersion",
-				"Device.DeviceInfo.HardwareVersion":
-				device.HardwareVersion = param.Value
-			case "InternetGatewayDevice.DeviceInfo.ModelName",
-				"Device.DeviceInfo.ModelName":
-				device.ModelName = param.Value
-			case "InternetGatewayDevice.ManagementServer.ConnectionRequestURL",
-				"Device.ManagementServer.ConnectionRequestURL":
-				device.ConnectionRequest = param.Value
-			case "InternetGatewayDevice.WANDevice.1.WANDeviceIF.1.OnuOpticalInfo.RxOpticalPower",
-				"InternetGatewayDevice.WANDevice.1.WANDeviceIF.1.Optical.RXPower",
-				"InternetGatewayDevice.WANDevice.1.X_ZTE-COM_WANPONInterfaceConfig.RXPower",
-				"InternetGatewayDevice.WANDevice.1.X_GponInterafceConfig.RXPower",
-				"InternetGatewayDevice.WANDevice.1.X_FH_GponInterfaceConfig.RXPower",
-				"InternetGatewayDevice.WANDevice.1.X_CMCC_EponInterfaceConfig.RXPower",
-				"InternetGatewayDevice.WANDevice.1.X_CMCC_GponInterfaceConfig.RXPower",
-				"InternetGatewayDevice.WANDevice.1.X_CT-COM_EponInterfaceConfig.RXPower",
-				"InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower",
-				"InternetGatewayDevice.WANDevice.1.X_CU_WANEPONInterfaceConfig.OpticalTransceiver.RXPower",
-				"InternetGatewayDevice.X_ALU_OntOpticalParam.RXPower",
-				"InternetGatewayDevice.WANDevice.1.X_TPLINK_GponInterfaceConfig.RXPower",
-				"Device.Optical.Interface.1.Stats.RxPower":
-				if p, err := strconv.ParseFloat(param.Value, 64); err == nil {
-					if p < 0 {
-						// Huawei/Fiberhome/Nokia often report directly in dBm (negative)
-						device.RXPower = p
-					} else if p > 0 {
-						// ZTE/CIOT/CT-COM/CMCC formula: 30 + (log10(p * 10^-7) * 10)
-						// Equivalent to: (10 * log10(p)) - 40
-						dbm := (10 * math.Log10(p)) - 40
-						device.RXPower = math.Round(dbm*100) / 100
-					}
-				}
-			case "InternetGatewayDevice.DeviceInfo.Description",
-				"Device.DeviceInfo.Description":
-				// Avoid long DeviceSummary
-				if len(param.Value) < 50 && !strings.Contains(param.Value, "[]") {
-					device.Template = param.Value
-				}
-			case "InternetGatewayDevice.DeviceInfo.UpTime",
-				"Device.DeviceInfo.UpTime":
-				if u, err := strconv.ParseInt(param.Value, 10, 64); err == nil {
-					device.Uptime = u
-				}
+			parser.ParseParameter(param.Name, param.Value)
+		}
+
+		// Get parsed device data and update main device
+		parsedDevice := parser.GetDeviceData()
+		if parsedDevice != nil {
+			// Update device fields that were parsed from Inform
+			if parsedDevice.RXPower != 0 {
+				device.RXPower = parsedDevice.RXPower
 			}
-
-			// Summing active clients across all SSIDs (Logic from GenieACS)
-			if strings.Contains(param.Name, "WLANConfiguration.") &&
-				(strings.HasSuffix(param.Name, "TotalAssociations") ||
-					strings.HasSuffix(param.Name, "WLAN_AssociatedDeviceNumberOfEntries") ||
-					strings.HasSuffix(param.Name, "AssociatedDeviceNumberOfEntities")) {
-				if c, err := strconv.Atoi(param.Value); err == nil {
-					// We use a temporary summation if this is the first WLAN param in this Inform
-					// Note: ClientCount is reset to 0 in Inform processing for specific models
-					// but here we sum them contextually.
-					device.ClientCount += c
-				}
+			if parsedDevice.TXPower != 0 {
+				device.TXPower = parsedDevice.TXPower
 			}
-
-			// If device reports a global host count, it's usually more accurate
-			if strings.HasSuffix(param.Name, "HostNumberOfEntries") {
-				if c, err := strconv.Atoi(param.Value); err == nil && c > 0 {
-					device.ClientCount = c
-				}
+			if parsedDevice.OpticalTemperature != 0 {
+				device.OpticalTemperature = parsedDevice.OpticalTemperature
 			}
-
-			// PPPoE Username Extraction (Logic from GenieACS script)
-			// We look for any WANPPPConnection.*.Username
-			if (strings.Contains(param.Name, "WANPPPConnection") && strings.HasSuffix(param.Name, "Username")) ||
-				strings.HasSuffix(param.Name, "X_CT-COM_UserInfo.UserName") ||
-				strings.HasSuffix(param.Name, "X_CMCC_UserInfo.UserName") {
-
-				if param.Value != "" && param.Value != "default" && param.Value != "null" {
-					// We use Template field to show PPPoE Username in the device list
-					device.Template = param.Value
-					// Also store in PPPoEUsername field
-					device.PPPoEUsername = param.Value
-				}
+			if parsedDevice.OpticalVoltage != 0 {
+				device.OpticalVoltage = parsedDevice.OpticalVoltage
 			}
-
-			// Temperature Extraction
-			if strings.Contains(strings.ToLower(param.Name), "temperature") {
-				if v, err := strconv.ParseFloat(param.Value, 64); err == nil {
-					// Apply conversion logic based on value range
-					if v > 1000 {
-						device.Temperature = v / 256.0
-					} else if v > 100 {
-						device.Temperature = v / 10.0
-					} else {
-						device.Temperature = v
-					}
-				}
+			if parsedDevice.OpticalCurrent != 0 {
+				device.OpticalCurrent = parsedDevice.OpticalCurrent
 			}
-
-			// IP Extraction (PPPoE / DHCP / Static)
-			// Logic from GenieACS "pppoeIP" and "tr069IP" scripts
-			if strings.HasSuffix(param.Name, "ExternalIPAddress") ||
-				strings.HasSuffix(param.Name, "IPv4Address.1.IPAddress") {
-
-				// Avoid 0.0.0.0 and prefer non-empty values
-				if param.Value != "" && param.Value != "0.0.0.0" {
-					// If we already have a PPPoE IP, don't let it be easily overwritten by a random WAN IP
-					// unless the current one is empty
-					if device.IPAddress == "" || strings.Contains(param.Name, "WANPPPConnection") ||
-						!strings.Contains(device.IPAddress, ".") {
-						device.IPAddress = param.Value
-					}
-				}
+			if parsedDevice.Distance != 0 {
+				device.Distance = parsedDevice.Distance
 			}
 		}
 
 		s.DB.UpdateDevice(device)
-		log.Printf("Device updated: %s (Status: online, RX: %.2f)", device.SerialNumber, device.RXPower)
+		log.Printf("Device updated: %s (Status: online, RX: %.2f dBm, TX: %.2f dBm)", device.SerialNumber, device.RXPower, device.TXPower)
 
 		// Store session for this IP address so we can identify device in subsequent responses
 		clientIP := strings.Split(r.RemoteAddr, ":")[0]
@@ -571,6 +507,14 @@ func (s *Server) handleGetParameterValuesResponse(envelope *SOAPEnvelope, r *htt
 	}
 
 	if device != nil {
+		// Use new parameter parser for better data extraction
+		parser := NewDeviceParameterParser(device, device.Manufacturer, device.ModelName)
+
+		// Parse all parameters
+		for _, p := range parsed.ParameterList {
+			parser.ParseParameter(p.Name, p.Value)
+		}
+
 		// Store each parameter
 		storedCount := 0
 		for _, p := range parsed.ParameterList {
@@ -581,6 +525,39 @@ func (s *Server) handleGetParameterValuesResponse(envelope *SOAPEnvelope, r *htt
 				storedCount++
 			}
 		}
+
+		// Update device with parsed data
+		parsedDevice := parser.GetDeviceData()
+		if parsedDevice != nil && device != nil {
+			// Update device fields that were parsed
+			if parsedDevice.RXPower != 0 {
+				device.RXPower = parsedDevice.RXPower
+			}
+			if parsedDevice.TXPower != 0 {
+				device.TXPower = parsedDevice.TXPower
+			}
+			if parsedDevice.OpticalTemperature != 0 {
+				device.OpticalTemperature = parsedDevice.OpticalTemperature
+			}
+			if parsedDevice.OpticalVoltage != 0 {
+				device.OpticalVoltage = parsedDevice.OpticalVoltage
+			}
+			if parsedDevice.OpticalCurrent != 0 {
+				device.OpticalCurrent = parsedDevice.OpticalCurrent
+			}
+			if parsedDevice.Distance != 0 {
+				device.Distance = parsedDevice.Distance
+			}
+
+			// Save updated device to database
+			if err := s.DB.UpdateDevice(device); err != nil {
+				log.Printf("Error updating device with parsed parameters: %v", err)
+			} else {
+				log.Printf("Updated device %s with parsed optical parameters: RX=%.2f dBm, TX=%.2f dBm, Temp=%.2f°C",
+					device.SerialNumber, device.RXPower, device.TXPower, device.OpticalTemperature)
+			}
+		}
+
 		log.Printf("Stored %d parameters for device %s (IP: %s)", storedCount, device.SerialNumber, clientIP)
 
 		// Mark task as completed
@@ -949,20 +926,47 @@ func (s *Server) bootstrapDevice(device *models.Device) {
 	}
 
 	// 2. Schedule Parameter Refresh (GetParameterValues)
-	// We want to fetch all these important paths mentioned in the script
-	refreshPaths := []string{
+	// Use comprehensive parameter system for better ONU data collection
+
+	// Get standard ONU parameters
+	standardParams := GetStandardONUParameters()
+	commonParams := GetONUCommonParameters()
+
+	// Get vendor-specific parameters
+	vendorResolver := NewVendorSpecificParameterResolver(device.Manufacturer, device.ModelName)
+	vendorParams := vendorResolver.GetVendorSpecificParameters()
+
+	// Combine all parameter paths
+	allPaths := make([]string, 0)
+
+	// Add standard parameters
+	for _, category := range standardParams {
+		for _, param := range category.Parameters {
+			allPaths = append(allPaths, param.Path)
+		}
+	}
+
+	// Add common parameters
+	allPaths = append(allPaths, commonParams...)
+
+	// Add vendor-specific parameters
+	allPaths = append(allPaths, vendorParams...)
+
+	// Add legacy paths for backward compatibility
+	legacyPaths := []string{
 		"InternetGatewayDevice.LANDevice.1.WLANConfiguration.",
 		"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.",
 		"InternetGatewayDevice.LANDevice.1.Hosts.",
 		"InternetGatewayDevice.DeviceInfo.",
 	}
+	allPaths = append(allPaths, legacyPaths...)
 
-	// Add vendor specific paths
+	// Add vendor-specific paths from legacy logic
 	if isHuawei {
-		refreshPaths = append(refreshPaths, "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_HW_VenderClassID")
+		allPaths = append(allPaths, "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_HW_VenderClassID")
 	}
 
-	payloadRefresh, _ := json.Marshal(refreshPaths)
+	payloadRefresh, _ := json.Marshal(allPaths)
 	refreshTask := &models.DeviceTask{
 		DeviceID:   device.ID,
 		Type:       models.TaskGetParameterValues,
@@ -970,4 +974,7 @@ func (s *Server) bootstrapDevice(device *models.Device) {
 		Parameters: payloadRefresh,
 	}
 	s.DB.CreateTask(refreshTask)
+
+	log.Printf("Auto-provisioning: Queued comprehensive parameter refresh for %s (%s %s) with %d parameters",
+		device.SerialNumber, device.Manufacturer, device.ModelName, len(allPaths))
 }

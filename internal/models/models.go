@@ -23,6 +23,11 @@ type Device struct {
 	MACAddress        string       `json:"macAddress"`
 	Uptime            int64        `json:"uptime"`
 	RXPower           float64      `json:"rxPower"`
+	TXPower           float64      `json:"txPower,omitempty"`
+	OpticalTemperature float64     `json:"opticalTemperature,omitempty"`
+	OpticalVoltage     float64     `json:"opticalVoltage,omitempty"`
+	OpticalCurrent     float64     `json:"opticalCurrent,omitempty"`
+	Distance           float64     `json:"distance,omitempty"`
 	ClientCount       int          `json:"clientCount"`
 	Template          string       `json:"template"`
 	// PPPoE Information
