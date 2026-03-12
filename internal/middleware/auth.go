@@ -24,12 +24,14 @@ type Claims struct {
 func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Skip auth for login and public endpoints
-			if strings.HasPrefix(r.URL.Path, "/api/auth/login") ||
-				strings.HasPrefix(r.URL.Path, "/api/portal/auth/login") ||
+			// Skip auth for login, public endpoints, web pages and static files
+			if strings.HasPrefix(r.URL.Path, "/api/auth/") ||
+				strings.HasPrefix(r.URL.Path, "/api/portal/auth/") ||
 				strings.HasPrefix(r.URL.Path, "/api/callbacks/") ||
+				strings.HasPrefix(r.URL.Path, "/static/") ||
 				r.URL.Path == "/health" ||
-				r.URL.Path == "/favicon.ico" {
+				r.URL.Path == "/favicon.ico" ||
+				!strings.HasPrefix(r.URL.Path, "/api/") {
 				next.ServeHTTP(w, r)
 				return
 			}
