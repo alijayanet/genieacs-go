@@ -151,6 +151,7 @@
     </style>
     <!-- Sidebar loaded via sidebar.js -->
     <script src="/static/js/sidebar.js"></script>
+    <script src="/static/js/api.js"></script>
 </head>
 
 <body>
@@ -461,7 +462,7 @@
 
         async function fetchDevice() {
             try {
-                const res = await fetch(`/api/devices/${deviceId}`);
+                const res = await apiFetch(`/api/devices/${deviceId}`);
                 if (!res.ok) throw new Error('Failed to fetch device');
                 device = await res.json();
                 renderSummary();
@@ -473,7 +474,7 @@
         }
 
         async function refreshDevice() {
-            const res = await fetch(`/api/devices/${deviceId}/refresh`, { method: 'POST' });
+            const res = await apiFetch(`/api/devices/${deviceId}/refresh`, { method: 'POST' });
             if (res.ok) {
                 alert('Refresh command queued successfully');
                 location.reload();
@@ -482,13 +483,13 @@
 
         async function rebootDevice() {
             if (!confirm('Are you sure you want to reboot this device?')) return;
-            const res = await fetch(`/api/devices/${deviceId}/reboot`, { method: 'POST' });
+            const res = await apiFetch(`/api/devices/${deviceId}/reboot`, { method: 'POST' });
             if (res.ok) alert('Reboot command queued');
         }
 
         async function factoryResetDevice() {
             if (!confirm('WARNING: Factory reset will erase all settings. Continue?')) return;
-            const res = await fetch(`/api/devices/${deviceId}/factory-reset`, { method: 'POST' });
+            const res = await apiFetch(`/api/devices/${deviceId}/factory-reset`, { method: 'POST' });
             if (res.ok) alert('Factory reset command queued');
         }
 
@@ -498,7 +499,7 @@
             list.innerHTML = '<div class="loading">Loading parameters...</div>';
 
             try {
-                const res = await fetch(`/api/devices/${deviceId}/parameters`);
+                const res = await apiFetch(`/api/devices/${deviceId}/parameters`);
                 allParams = await res.json();
                 renderParams(allParams);
             } catch (err) {
@@ -530,7 +531,7 @@
         }
 
         async function loadLan() {
-            const res = await fetch(`/api/devices/${deviceId}/clients`);
+            const res = await apiFetch(`/api/devices/${deviceId}/clients`);
             const data = await res.json();
             const hosts = document.getElementById('lanHosts');
 
@@ -564,7 +565,7 @@
         }
 
         async function loadPon() {
-            const res = await fetch(`/api/devices/${deviceId}/pon`);
+            const res = await apiFetch(`/api/devices/${deviceId}/pon`);
             const pon = await res.json();
             const info = document.getElementById('ponInfo');
             info.innerHTML = `
@@ -588,7 +589,7 @@
 
             try {
                 // Use the new dedicated endpoint for WAN information
-                const res = await fetch(`/api/devices/${deviceId}/wan-details`);
+                const res = await apiFetch(`/api/devices/${deviceId}/wan-details`);
                 const wanInfo = await res.json();
 
                 if (!wanInfo) {
@@ -735,7 +736,7 @@
             }
 
             try {
-                const res = await fetch(`/api/devices/${deviceId}/parameters`);
+                const res = await apiFetch(`/api/devices/${deviceId}/parameters`);
                 const params = await res.json();
 
                 if (!params || !Array.isArray(params) || params.length === 0) {
@@ -778,7 +779,7 @@
             const info = document.getElementById('userInfo');
 
             try {
-                const res = await fetch(`/api/devices/${deviceId}/parameters`);
+                const res = await apiFetch(`/api/devices/${deviceId}/parameters`);
                 const params = await res.json();
 
                 if (!params || !Array.isArray(params)) {
@@ -813,7 +814,7 @@
             const info = document.getElementById('tr069Info');
 
             try {
-                const res = await fetch(`/api/devices/${deviceId}/parameters`);
+                const res = await apiFetch(`/api/devices/${deviceId}/parameters`);
                 const params = await res.json();
 
                 if (!params || !Array.isArray(params)) {
@@ -858,7 +859,7 @@
             }
 
             try {
-                const res = await fetch(`/api/devices/${deviceId}/wifi/ssid`, {
+                const res = await apiFetch(`/api/devices/${deviceId}/wifi/ssid`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ssid: ssid })
@@ -892,7 +893,7 @@
             }
 
             try {
-                const res = await fetch(`/api/devices/${deviceId}/wifi/password`, {
+                const res = await apiFetch(`/api/devices/${deviceId}/wifi/password`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password: password })
@@ -915,7 +916,7 @@
         // --- LAN Configuration Functions ---
         async function loadLANConfig() {
             try {
-                const res = await fetch(`/api/devices/${deviceId}/lan`);
+                const res = await apiFetch(`/api/devices/${deviceId}/lan`);
                 const config = await res.json();
                 
                 document.getElementById('lanIP').value = config.ipAddress || '';
@@ -944,7 +945,7 @@
             };
 
             try {
-                const res = await fetch(`/api/devices/${deviceId}/lan`, {
+                const res = await apiFetch(`/api/devices/${deviceId}/lan`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
@@ -968,7 +969,7 @@
             list.innerHTML = '<div class="loading">Loading port forwarding rules...</div>';
 
             try {
-                const res = await fetch(`/api/devices/${deviceId}/port-forwarding`);
+                const res = await apiFetch(`/api/devices/${deviceId}/port-forwarding`);
                 const rules = await res.json();
 
                 if (rules.length === 0) {
@@ -1024,7 +1025,7 @@
             }
 
             try {
-                const res = await fetch(`/api/devices/${deviceId}/port-forwarding`, {
+                const res = await apiFetch(`/api/devices/${deviceId}/port-forwarding`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(rule)
@@ -1051,7 +1052,7 @@
         // --- QoS Configuration Functions ---
         async function loadQoSConfig() {
             try {
-                const res = await fetch(`/api/devices/${deviceId}/qos`);
+                const res = await apiFetch(`/api/devices/${deviceId}/qos`);
                 const config = await res.json();
 
                 document.getElementById('qosEnable').value = config.enable ? 'true' : 'false';
@@ -1070,7 +1071,7 @@
             };
 
             try {
-                const res = await fetch(`/api/devices/${deviceId}/qos`, {
+                const res = await apiFetch(`/api/devices/${deviceId}/qos`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)

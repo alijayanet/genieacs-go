@@ -66,6 +66,7 @@
     </style>
     <!-- Sidebar loaded via sidebar.js -->
     <script src="/static/js/sidebar.js"></script>
+    <script src="/static/js/api.js"></script>
 </head>
 
 <body>
@@ -140,7 +141,7 @@
             if (search) url += '&search=' + encodeURIComponent(search);
             if (status) url += '&status=' + status;
 
-            const res = await fetch(url);
+            const res = await apiFetch(url);
             const data = await res.json();
             renderDevices(data.devices || []);
         }
@@ -148,11 +149,11 @@
         async function loadDeviceDetails(deviceId) {
             try {
                 // Fetch WiFi SSID data
-                const wifiRes = await fetch(`/api/devices/${deviceId}/wifi`);
+                const wifiRes = await apiFetch(`/api/devices/${deviceId}/wifi`);
                 const wifiData = await wifiRes.json();
 
                 // Fetch connected clients
-                const clientsRes = await fetch(`/api/devices/${deviceId}/clients`);
+                const clientsRes = await apiFetch(`/api/devices/${deviceId}/clients`);
                 const clientsData = await clientsRes.json();
 
                 return {
@@ -227,7 +228,7 @@
 
         document.getElementById('addForm').onsubmit = async (e) => {
             e.preventDefault();
-            await fetch('/api/devices', {
+            await apiFetch('/api/devices', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

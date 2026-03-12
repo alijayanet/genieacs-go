@@ -323,6 +323,7 @@
     </style>
     <!-- Sidebar loaded via sidebar.js -->
     <script src="/static/js/sidebar.js"></script>
+    <script src="/static/js/api.js"></script>
 </head>
 
 <body>
@@ -774,7 +775,7 @@
 
         async function loadPackages() {
             try {
-                const res = await fetch('/api/packages', {
+                const res = await apiFetch('/api/packages', {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const result = await res.json();
@@ -858,7 +859,7 @@
             if (!confirm(`Are you sure you want to delete package "${name}"?`)) return;
 
             try {
-                const res = await fetch(`/api/packages/${id}`, {
+                const res = await apiFetch(`/api/packages/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
@@ -874,7 +875,7 @@
 
         async function syncProfiles() {
             try {
-                const res = await fetch('/api/mikrotik/profiles', {
+                const res = await apiFetch('/api/mikrotik/profiles', {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const profiles = await res.json();
@@ -912,7 +913,7 @@
 
         async function testMikrotik() {
             try {
-                const res = await fetch('/api/mikrotik/test', {
+                const res = await apiFetch('/api/mikrotik/test', {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const result = await res.json();
@@ -945,7 +946,7 @@
             try {
                 const url = id ? `/api/packages/${id}` : '/api/packages';
                 const method = id ? 'PUT' : 'POST';
-                const res = await fetch(url, {
+                const res = await apiFetch(url, {
                     method: method,
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                     body: JSON.stringify(data)
@@ -969,7 +970,7 @@
             const data = Object.fromEntries(formData.entries());
 
             try {
-                const res = await fetch('/api/settings', {
+                const res = await apiFetch('/api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                     body: JSON.stringify(data)
@@ -991,7 +992,7 @@
             const data = Object.fromEntries(formData.entries());
 
             try {
-                const res = await fetch('/api/settings', {
+                const res = await apiFetch('/api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                     body: JSON.stringify(data)
@@ -1015,7 +1016,7 @@
             };
 
             try {
-                const res = await fetch('/api/mikrotik/profiles', {
+                const res = await apiFetch('/api/mikrotik/profiles', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                     body: JSON.stringify(data)
@@ -1039,7 +1040,7 @@
             const data = Object.fromEntries(formData.entries());
 
             try {
-                const res = await fetch('/api/settings', {
+                const res = await apiFetch('/api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                     body: JSON.stringify(data)
@@ -1057,7 +1058,7 @@
 
         async function loadSettings() {
             try {
-                const res = await fetch('/api/settings', {
+                const res = await apiFetch('/api/settings', {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const settings = await res.json();

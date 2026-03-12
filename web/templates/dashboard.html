@@ -656,6 +656,7 @@
     </style>
     <!-- Sidebar loaded via sidebar.js -->
     <script src="/static/js/sidebar.js"></script>
+    <script src="/static/js/api.js"></script>
 </head>
 
 <body>
@@ -901,7 +902,7 @@
         // Load dashboard data
         async function loadDashboardData() {
             try {
-                const response = await fetch('/api/dashboard/stats');
+                const response = await apiFetch('/api/dashboard/stats');
                 const stats = await response.json();
 
                 let totalDevices = stats.totalDevices || 0;
@@ -911,7 +912,7 @@
                 // If stats are zero, fallback to counting from /api/devices
                 if (totalDevices === 0) {
                     try {
-                        const devRes = await fetch('/api/devices?limit=1000');
+                        const devRes = await apiFetch('/api/devices?limit=1000');
                         const devData = await devRes.json();
                         const devices = devData.devices || [];
                         totalDevices = devices.length;
@@ -936,7 +937,7 @@
                 console.error('Failed to load dashboard data:', error);
                 // Try to load device counts directly as fallback
                 try {
-                    const devRes = await fetch('/api/devices?limit=1000');
+                    const devRes = await apiFetch('/api/devices?limit=1000');
                     const devData = await devRes.json();
                     const devices = devData.devices || [];
                     document.getElementById('totalDevices').textContent = devices.length;
@@ -959,7 +960,7 @@
 
         async function loadCustomerStats() {
             try {
-                const response = await fetch('/api/customers?limit=1');
+                const response = await apiFetch('/api/customers?limit=1');
                 const data = await response.json();
                 document.getElementById('totalCustomers').textContent = data.total || 0;
             } catch (error) {
@@ -969,7 +970,7 @@
 
         async function loadBillingStats() {
             try {
-                const response = await fetch('/api/billing/stats');
+                const response = await apiFetch('/api/billing/stats');
                 const data = await response.json();
                 if (data) {
                     document.getElementById('monthlyRevenue').textContent = formatCurrency(data.monthlyRevenue || 0);
@@ -983,7 +984,7 @@
 
         async function loadTicketStats() {
             try {
-                const response = await fetch('/api/tickets?status=open&limit=1');
+                const response = await apiFetch('/api/tickets?status=open&limit=1');
                 const data = await response.json();
                 // Count open tickets
                 const openCount = data.tickets ? data.tickets.length : 0;
@@ -1002,7 +1003,7 @@
 
         async function loadRecentDevices() {
             try {
-                const response = await fetch('/api/devices?limit=5');
+                const response = await apiFetch('/api/devices?limit=5');
                 const data = await response.json();
 
                 console.log('Dashboard devices API response:', data);
@@ -1150,7 +1151,7 @@
 
         async function loadNetworkStats() {
             try {
-                const response = await fetch('/api/network/stats');
+                const response = await apiFetch('/api/network/stats');
                 const result = await response.json();
                 if (result.success && result.data) {
                     const s = result.data;
