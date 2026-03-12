@@ -261,6 +261,7 @@
     </style>
     <!-- Sidebar loaded via sidebar.js -->
     <script src="/static/js/sidebar.js"></script>
+    <script src="/static/js/api.js"></script>
 </head>
 
 <body>
@@ -357,7 +358,7 @@
         async function loadLocations() {
             try {
                 // Load customer locations for the map markers
-                const res = await fetch('/api/locations');
+                const res = await apiFetch('/api/locations');
                 const result = await res.json();
                 customers = result.data || [];
                 updateStats();
@@ -373,7 +374,7 @@
         // Function to load all devices for the dropdown
         async function loadDevicesForDropdown() {
             try {
-                const res = await fetch('/api/devices?limit=1000');
+                const res = await apiFetch('/api/devices?limit=1000');
                 const result = await res.json();
                 const devices = result.devices || [];
                 
@@ -578,7 +579,7 @@
             try {
 
                 // Use new endpoint for updating customer location
-                await fetch(`/api/customers/$ {
+                await apiFetch(`/api/customers/$ {
                         id
                     }
 

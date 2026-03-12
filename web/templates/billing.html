@@ -416,6 +416,7 @@
     </style>
     <!-- Sidebar loaded via sidebar.js -->
     <script src="/static/js/sidebar.js"></script>
+    <script src="/static/js/api.js"></script>
 </head>
 
 <body>
@@ -694,7 +695,7 @@
 
         async function loadProfiles() {
             try {
-                const response = await fetch('/api/mikrotik/profiles', {
+                const response = await apiFetch('/api/mikrotik/profiles', {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 pppoeProfiles = await response.json();
@@ -706,7 +707,7 @@
         async function loadIsolirCustomers() {
             const container = document.getElementById('isolirCustomerList');
             try {
-                const response = await fetch('/api/customers?limit=100', {
+                const response = await apiFetch('/api/customers?limit=100', {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const data = await response.json();
@@ -773,7 +774,7 @@
 
         async function loadBillingStats() {
             try {
-                const response = await fetch('/api/billing/stats');
+                const response = await apiFetch('/api/billing/stats');
                 const data = await response.json();
                 if (data) {
                     document.getElementById('monthlyRevenue').textContent = formatCurrency(data.monthlyRevenue || 0);
@@ -789,7 +790,7 @@
         async function loadInvoices(status = '') {
             const container = document.getElementById('invoiceList');
             try {
-                const response = await fetch(`/api/invoices?status=${status}&limit=20`);
+                const response = await apiFetch(`/api/invoices?status=${status}&limit=20`);
                 const data = await response.json();
                 const invoices = data.invoices || [];
 
@@ -846,7 +847,7 @@
 
         async function loadCustomersForPayment() {
             try {
-                const response = await fetch('/api/customers?limit=100');
+                const response = await apiFetch('/api/customers?limit=100');
                 const data = await response.json();
                 const customers = data.customers || [];
                 const select = document.getElementById('paymentCustomer');
@@ -873,7 +874,7 @@
             }
 
             try {
-                const response = await fetch('/api/payments', {
+                const response = await apiFetch('/api/payments', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -907,7 +908,7 @@
             if (!confirm('Generate invoices for all active customers this month?')) return;
 
             try {
-                const response = await fetch('/api/invoices/generate', {
+                const response = await apiFetch('/api/invoices/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -934,7 +935,7 @@
             content.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i></div>';
 
             try {
-                const response = await fetch(`/api/invoices/${id}`);
+                const response = await apiFetch(`/api/invoices/${id}`);
                 const data = await response.json();
                 const inv = data.invoice;
                 const customer = data.customer;
@@ -1008,7 +1009,7 @@
             if (!confirm('Mark this invoice as paid?')) return;
 
             try {
-                const response = await fetch(`/api/invoices/${id}/pay`, {
+                const response = await apiFetch(`/api/invoices/${id}/pay`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ method: 'cash' })
@@ -1040,7 +1041,7 @@
             if (!confirm(`Suspend all customers with invoices overdue > ${days} days?`)) return;
 
             try {
-                const response = await fetch('/api/billing/batch-isolir', {
+                const response = await apiFetch('/api/billing/batch-isolir', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ daysOverdue: parseInt(days) })
@@ -1061,7 +1062,7 @@
         async function payOnline(id) {
             try {
                 showToast('Initiating payment...', 'info');
-                const response = await fetch(`/api/invoices/${id}/pay/online`, { method: 'POST' });
+                const response = await apiFetch(`/api/invoices/${id}/pay/online`, { method: 'POST' });
                 const result = await response.json();
 
                 if (result.success) {
@@ -1105,7 +1106,7 @@
             if (!confirm(`Isolir pelanggan ${name}?\n\nProfile PPPoE akan diubah ke pppoe-isolir (1 Mbps).`)) return;
 
             try {
-                const response = await fetch(`/api/customers/${id}/isolir`, {
+                const response = await apiFetch(`/api/customers/${id}/isolir`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -1127,7 +1128,7 @@
             if (!confirm(`Aktifkan kembali pelanggan ${name}?\n\nProfile PPPoE akan diubah ke ${profile}.`)) return;
 
             try {
-                const response = await fetch(`/api/customers/${id}/unsuspend`, {
+                const response = await apiFetch(`/api/customers/${id}/unsuspend`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ profile })
@@ -1226,7 +1227,7 @@
         // Print Invoice Function
         async function printInvoice(id) {
             try {
-                const response = await fetch(`/api/invoices/${id}`);
+                const response = await apiFetch(`/api/invoices/${id}`);
                 const data = await response.json();
                 const inv = data.invoice;
                 const customer = data.customer;
@@ -1317,7 +1318,7 @@
         // Export Invoices to CSV
         async function exportInvoicesCSV() {
             try {
-                const response = await fetch('/api/invoices?limit=1000');
+                const response = await apiFetch('/api/invoices?limit=1000');
                 const data = await response.json();
                 const invoices = data.invoices || [];
 

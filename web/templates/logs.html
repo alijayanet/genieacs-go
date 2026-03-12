@@ -13,6 +13,7 @@
 <body>
     <!-- Sidebar loaded via sidebar.js -->
     <script src="/static/js/sidebar.js"></script>
+    <script src="/static/js/api.js"></script>
 
     <main class="main-content">
         <div class="header">
@@ -189,7 +190,7 @@
                 const params = new URLSearchParams({ limit });
                 if (type) params.append('type', type);
 
-                const response = await fetch(`/api/logs?${params}`);
+                const response = await apiFetch(`/api/logs?${params}`);
                 if (!response.ok) throw new Error('Failed to load logs');
 
                 allLogs = await response.json();

@@ -256,6 +256,7 @@
     </style>
     <!-- Sidebar loaded via sidebar.js -->
     <script src="/static/js/sidebar.js"></script>
+    <script src="/static/js/api.js"></script>
 </head>
 
 <body>
@@ -435,7 +436,7 @@
 
         async function loadStats() {
             try {
-                const response = await fetch('/api/billing/stats');
+                const response = await apiFetch('/api/billing/stats');
                 const data = await response.json();
                 if (data) {
                     document.getElementById('totalCustomers').textContent = data.totalCustomers || 0;
@@ -454,7 +455,7 @@
                 let url = `/api/customers?status=${currentFilter === 'all' ? '' : currentFilter}`;
                 if (search) url += `&search=${encodeURIComponent(search)}`;
 
-                const response = await fetch(url);
+                const response = await apiFetch(url);
                 const data = await response.json();
                 customers = data.customers || [];
                 renderCustomers();
@@ -470,7 +471,7 @@
 
         async function loadPackages() {
             try {
-                const response = await fetch('/api/packages?active=true');
+                const response = await apiFetch('/api/packages?active=true');
                 packages = await response.json() || [];
                 const select = document.getElementById('customerPackage');
                 select.innerHTML = '<option value="">Select package...</option>';
@@ -484,7 +485,7 @@
 
         async function loadDevices() {
             try {
-                const response = await fetch('/api/devices');
+                const response = await apiFetch('/api/devices');
                 const data = await response.json();
                 devices = data.devices || [];
                 const select = document.getElementById('customerDevice');
@@ -681,7 +682,7 @@
                 const url = isEdit ? `/api/customers/${editId}` : '/api/customers';
                 const method = isEdit ? 'PUT' : 'POST';
 
-                const response = await fetch(url, {
+                const response = await apiFetch(url, {
                     method: method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -705,7 +706,7 @@
             if (!confirm(`Are you sure you want to delete customer "${name}"?`)) return;
 
             try {
-                const response = await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+                const response = await apiFetch(`/api/customers/${id}`, { method: 'DELETE' });
                 if (response.ok) {
                     showToast('Customer deleted!');
                     loadCustomers();

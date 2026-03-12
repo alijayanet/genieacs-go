@@ -401,6 +401,7 @@
     </style>
     <!-- Sidebar loaded via sidebar.js -->
     <script src="/static/js/sidebar.js"></script>
+    <script src="/static/js/api.js"></script>
 </head>
 
 <body>
@@ -563,7 +564,7 @@
                 let url = `/api/tickets?status=${currentFilter}`;
                 if (search) url += `&search=${encodeURIComponent(search)}`;
 
-                const response = await fetch(url);
+                const response = await apiFetch(url);
                 const data = await response.json();
                 tickets = data.tickets || [];
                 renderTickets();
@@ -580,7 +581,7 @@
 
         async function loadCustomers() {
             try {
-                const response = await fetch('/api/customers?limit=100');
+                const response = await apiFetch('/api/customers?limit=100');
                 const data = await response.json();
                 customers = data.customers || [];
                 const select = document.getElementById('ticketCustomer');
@@ -747,7 +748,7 @@
             const status = document.getElementById('panelStatus').value;
 
             try {
-                const response = await fetch(`/api/tickets/${currentTicketId}`, {
+                const response = await apiFetch(`/api/tickets/${currentTicketId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status })
@@ -787,7 +788,7 @@
             };
 
             try {
-                const response = await fetch('/api/tickets', {
+                const response = await apiFetch('/api/tickets', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -810,7 +811,7 @@
             if (!confirm('Are you sure you want to delete this ticket?')) return;
 
             try {
-                const response = await fetch(`/api/tickets/${id}`, { method: 'DELETE' });
+                const response = await apiFetch(`/api/tickets/${id}`, { method: 'DELETE' });
                 if (response.ok) {
                     showToast('Ticket deleted!');
                     loadTickets();

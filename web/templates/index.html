@@ -846,6 +846,7 @@
         </div>
     </div>
 
+    <script src="/static/js/api.js"></script>
     <script>
         // Show/hide login modal
         function showLogin() {
@@ -875,7 +876,7 @@
             const password = document.getElementById('password').value;
 
             try {
-                const response = await fetch('/api/auth/login', {
+                const response = await apiFetch('/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -903,7 +904,7 @@
         // Fetch and display stats
         async function loadStats() {
             try {
-                const response = await fetch('/api/dashboard/stats');
+                const response = await apiFetch('/api/dashboard/stats');
                 const stats = await response.json();
 
                 document.getElementById('stat-devices').textContent = stats.totalDevices || 0;
